@@ -7,6 +7,11 @@ from machine import Pin
 from neopixel import NeoPixel
 from mqtt_as import MQTTClient
 from remote_light import LEDStrip, MQTTLed
+import esp32
+from esp32 import Partition
+import network
+import ubinascii
+import webapp
 
 
 # pin = Pin(0, Pin.OUT)   # set GPIO0 to output to drive NeoPixels
@@ -16,7 +21,7 @@ from remote_light import LEDStrip, MQTTLed
 # r, g, b = np[0]         # get first pixel colour
 
 
-led_strip = LEDStrip(pinout.PIN_LED1, 60)
+led_strip = LEDStrip(pinout.PIN_LED1, config['leds'])
 led_strip.fill((0, 0, 0, 0))
 led_strip.update()
 firstSet = True
@@ -26,6 +31,10 @@ async def main():
     # await client.connect()
     while True:
         await asyncio.sleep(5)
+
+
+def schedule(task):
+    asyncio.get_event_loop().create_task(task)
 
 
 async def publish(topic, msg):
@@ -38,7 +47,7 @@ def callback(topic_val, msg_val, retained):
     global led_strip, firstSet, client
     topic: string = topic_val.decode('ascii')
     msg = msg_val.decode('ascii')
-    filter = "iot/0/benjamin/lichtleiste/0/licht/"
+    filter = config['prefix']+'licht/'
     if not topic.startswith(filter):
         return
     val = topic.split(filter)[1]
@@ -53,7 +62,7 @@ def callback(topic_val, msg_val, retained):
             led_strip.set_state(msg == 'true')
             if setFlag:
                 t = filter+'state'
-                asyncio.get_event_loop().create_task(publish(t, msg))
+                schedule(publish(t, msg))
 
         elif val == 'rgbw':
             b = int(msg)
@@ -65,17 +74,32 @@ def callback(topic_val, msg_val, retained):
 
 
 async def conn_han(client: MQTTClient):
-    await client.subscribe('iot/0/benjamin/lichtleiste/0/licht/#', 1)
-    # await client.subscribe('iot/0/office/#', 1)
+    await client.subscribe(config['prefix']+'licht/#', 1)
+
+    await client.subscribe('iot/0/office/#', 1)
 
 
 def ready():
     print("=================R==E==A==D==Y========")
+    sta_if = network.WLAN(network.STA_IF)
+    (ip, mask, _, dns) = sta_if.ifconfig()
+    print("-- IP Address : {} : {}".format(ip, mask))
+    print("-- DNS Server : {}".format(dns))
+    schedule(publish(config['prefix']+'device/ip', "{}".format(ip)))
+    mac = ubinascii.hexlify(network.WLAN().config('mac'), ':').decode()
+    schedule(publish(config['prefix']+'device/mac', "{}".format(mac)))
+
+    # def run(self, host="127.0.0.1", port=8081, debug=False, lazy_init=False, log=None):
+    webapp.site.run(host="0.0.0.0", port=80, debug=True)
+    schedule(first_delay())
+    # TODO: Need to find a better solution to test for the verification when really doing OTA
+    print("=== Active Partition {}".format(Partition(Partition.RUNNING).info()))
+    Partition.mark_app_valid_cancel_rollback()
 
 
 async def first_delay():
     global firstSet
-    await asyncio.sleep(20)
+    await asyncio.sleep(60)
     firstSet = False
     print("Initial Phase ended")
 
@@ -85,10 +109,9 @@ client = None
 def run():
     global client
     loop = asyncio.get_event_loop()
-    client = MQTTLed(config, callback, conn_han, 'iot/0/benjamin/lichtleiste/0/licht/connect', ready)
+    client = MQTTLed(config, callback, conn_han, config['prefix']+'device/connect', ready)
     loop = asyncio.get_event_loop()
     loop.create_task(client.loop())
-    loop.create_task(first_delay())
 
     # TODO: LED Loop fpr frame effects
     try:
@@ -98,4 +121,6 @@ def run():
 
 
 MQTTClient.DEBUG = True
+
+
 run()
