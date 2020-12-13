@@ -1,5 +1,4 @@
 import network
-# from wifi import *
+import machine
 
-
-# do_connect()
+machine.freq(240000000)
