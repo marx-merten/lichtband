@@ -22,6 +22,7 @@ class MQTTApplication:
         self.mqtt = MQTTClient(config)
         self.cfg = config
         self.should_stop = False
+        self.subscribers = {}
 
     async def loop(self):
         await asyncio.sleep_ms(100)
@@ -51,18 +52,48 @@ class MQTTApplication:
         # just a flag at this point
         self.should_stop = True
 
+    def subscribe(self, filter: string, callback):
+        if filter in self.subscribers.keys():
+            return
+        if not filter.startswith('/') and self.prefix == "":
+            raise Exception("For use of relative subscribes a prefix need to be set")
+        # TODO: Better check that also captures bound methods :<class 'bound_method'>
+        # if not type(callback).__name__ == 'generator':
+        #     raise Exception("async function reference required {}".format(type(callback)))
+        self.subscribers[filter] = callback
+        if filter.startswith('/'):
+            pass
+            # TODO: Adhoc subscribe required
+
     # Basic msg callback,
-    # TODO: handle subscription based on subscription list CB individually
     def cb_msg(self, topic_val, msg_val, retained):
         topic: string = topic_val.decode('ascii')
         msg = msg_val.decode('ascii')
+        if not topic.startswith('/'):
+            topic = '/'+topic
         print("{} set to {} ({})".format(topic, msg, retained))
+        processed = False
+        for f in self.subscribers.keys():
+            if not f.startswith('/'):
+                filter = "/"+self.prefix+f
+            else:
+                filter = f
+            print("Checking {}".format(filter))
+            if topic.startswith(filter):
+                schedule(self.subscribers[f](topic, msg, retained))
+                processed = True
+        if not processed:
+            print("...unprocessed")
 
     # Basic Connect
-    # TODO: handle all sub connect  if not within prefix, register to prefix if not empty
     async def cb_connect(self, client: MQTTClient):
+        print("Register subscribers")
         if self.prefix and self.prefix != "":
-            self.mqtt.subscribe(self.prefix+"#", qos=1)
+            await self.mqtt.subscribe(self.prefix+"#", qos=1)
+        for k in self.subscribers.keys():
+            if k.startswith('/'):
+                pass
+                # TODO: handle all subscriber connect  if not within prefix, register to prefix if not empty
 
     async def cb_started(self):
         if self.prefix and self.prefix != "":

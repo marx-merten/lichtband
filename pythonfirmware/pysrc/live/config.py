@@ -1,6 +1,9 @@
 # config.py Local configuration for mqtt_as demo programs.
 from sys import platform
 from mqtt_as import config
+from ubinascii import hexlify
+from machine import unique_id
+
 import globals.pinout as pinout
 
 
@@ -14,3 +17,4 @@ config['server'] = '172.17.0.46'
 config['port'] = 9883
 config['prefix'] = "iot/0/benjamin/lichtleiste/0/"
 config['leds'] = 300
+# config['client_id'] = hexlify(b'lkd')
