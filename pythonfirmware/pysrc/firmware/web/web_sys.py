@@ -6,6 +6,8 @@ from uhashlib import sha256
 import ubinascii
 import machine
 import esp32
+import uos
+from picoweb.utils import parse_qs
 
 
 app = picoweb.WebApp(__name__)
@@ -27,6 +29,12 @@ async def _json_error(resp, error, msg=None, status="401", payload={}):
     await _json_response(resp, data, status)
 
 
+async def delayed_reboot(delay):
+    print("Restarting in {}".format(delay))
+    await asyncio.sleep(delay)
+    machine.reset()
+
+
 async def _json_msg(resp, subject, msg=None, status="200", payload={}):
     data = {'code': status,
             'msg': subject}
@@ -46,6 +54,17 @@ async def stats(req, resp):
     p = {}
     (p['type'], p['subtype'], p['addr'], p['size'], p['label'], p['encrypted']) = currentPartition.info()
     result['current_partition'] = p
+    os = {}
+    (os['sysname'], os['nodename'], os['release'], os['version'], os['machine']) = uos.uname()
+    result['uname'] = os
+
+    (bsize, _, size, _, free, _, _, _, _, _) = uos.statvfs("/")
+    fs = {'size_kb': (size*bsize)/1024,
+          'size_blocks': size,
+          'avail_kb': (free*bsize)/1024,
+          'avail': (free*bsize),
+          'avail_blocks': free}
+    result['fs'] = fs
     await _json_response(resp, result)
 
 
@@ -73,19 +92,15 @@ async def ota_checksum(req, resp):
 last_checksum = ""
 
 
-async def delayed_reboot(delay, soft=False):
-    print("Restarting in {}".format(delay))
-    await asyncio.sleep(delay)
-    machine.reset()
-
-
 @app.route("/ota/activate")
 async def ota_upload(req, resp):
     result = {'status': 'restart'}
-    if not 'X-OTA-CHECKSUM' in req.headers.keys():
+    print(req.headers.keys())
+    if not b'X-OTA-CHECKSUM' in req.headers.keys():
         await _json_error(resp, "No Checksum", "checksum header required.")
         return
-    csum = req.headers['X-OTA-CHECKSUM']
+    csum = req.headers[b'X-OTA-CHECKSUM'].decode()
+    print(csum)
     if csum != last_checksum:
         await _json_error(resp, "wrong Checksum", payload={"last_checksum": last_checksum})
         return
@@ -147,17 +162,18 @@ async def ota_upload(req, resp):
                     partition.writeblocks(block, write_buffer)
                     block += 1
                 active = False
+    last_checksum = ubinascii.hexlify(checksum.digest()).decode()
     result = {
         'target_partition': label,
         'size': tsize,
         'blocks': block,
-        'sha256': ubinascii.hexlify(checksum.digest()).decode()
+        'sha256': last_checksum
     }
     await _json_response(resp, result)
 
 
 @app.route("/sys/reset")
 async def sys_restart(req, resp):
-    qs = req.parse_qs()
-    asyncio.get_event_loop().create_task(delayed_reboot(5, soft="soft" in qs.keys()))
+    qs = parse_qs(req.qs)
+    asyncio.get_event_loop().create_task(delayed_reboot(5))
     await _json_msg(resp, "Restart requested.")
