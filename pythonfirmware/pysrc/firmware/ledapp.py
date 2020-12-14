@@ -18,6 +18,7 @@ class LEDApp:
         self.state = False
         self.recovery = True
         app.add_ready_callback(lambda: schedule(self._delay_recovery_end(20)))
+        self.busy = asyncio.Lock()
 
     def update(self):
         if not self.state:
@@ -25,11 +26,14 @@ class LEDApp:
         else:
             self.leds.fill(self.rgbw)
 
+    def _end_recovery(self):
+        self.recovery = False
+        LOG.info("Ending recovery period ended.")
+
     async def _delay_recovery_end(self, delay):
         LOG.info("Ending recovery period in {} seconds".format(delay))
         await asyncio.sleep(delay)
-        self.recovery = False
-        LOG.info("Ending recovery period ended.".format(delay))
+        self._end_recovery()
 
     async def licht(self, fullTopic, topic, msg, retain):
         LOG.debug("LICHT: {}  -> {}".format(topic, msg))
@@ -42,17 +46,31 @@ class LEDApp:
             command = False
         if command or self.recovery:
             if verb == "state":
-                self.state = msg == 'true'
-                self.update()
-                if command:
-                    t = fullTopic[1:-len('/set')]
-                    schedule(self.app.publish(t, msg))
+                await self.busy.acquire()
+                try:
+                    self.state = msg == 'true'
+                    self.update()
+                    if command:
+                        self._end_recovery()
+                        t = fullTopic[1:-len('/set')]
+                        await self.app.publish(t, msg)
+                finally:
+                    self.busy.release()
 
             if verb == "rgbw":
                 b = int(msg)
                 (r, g, b, w) = (b >> 24, b >> 16 & 0xff, b >> 8 & 0xff, b & 0xff)
-                self.rgbw = (r, g, b, w)
-                self.update()
-                if command:
-                    t = fullTopic[1:-len('/set')]
-                    schedule(self.app.publish(t, msg))
+                # TODO: Evtl need to find a delay value and go for last value seen
+                if self.busy.locked():
+                    return
+
+                await self.busy.acquire()
+                try:
+                    self.rgbw = (r, g, b, w)
+                    self.update()
+                    if command:
+                        self._end_recovery()
+                        t = fullTopic[1:-len('/set')]
+                        await self.app.publish(t, msg)
+                finally:
+                    self.busy.release()
