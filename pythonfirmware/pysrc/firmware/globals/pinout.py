@@ -7,7 +7,7 @@
 # (I Only)           ADC0---GPIO36 -| [            ] [ LED2       ]|- GPIO22--I2C SCL
 # (I Only)           ADC3---GPIO39 -| [            ] [            ]|- GPIO1---TX0
 # (I Only)           ADC6---GPIO34 -| [            ] [            ]|- GPIO3---RX0
-# (I Only)           ADC7---GPIO35 -| [            ] [            ]|- GPIO21--I2C SDA
+# (I Only)           ADC7---GPIO35 -| [            ] [ DEBUG      ]|- GPIO21--I2C SDA
 #            Touch9--ADC4---GPIO32 -| [            ] [            ]|- GND
 #            Touch8--ADC5---GPIO33 -| [            ] [            ]|- GPIO19--VSPIMISO
 #              DAC1--ADC18--GPIO25 -| [            ] [            ]|- GPIO18--VSPI/SCK
@@ -30,3 +30,4 @@
 
 PIN_LED1 = 23
 PIN_LED2 = 22
+PIN_DEBUG = 21

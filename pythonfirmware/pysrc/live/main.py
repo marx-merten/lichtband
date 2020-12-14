@@ -1,9 +1,9 @@
 from ledcontroller import LEDController
 from mqttapp import MQTTApplication, MQTTWebApplication
-from config import config, pinout
+from config import config, pinout, MQTT_PREFIX, ONLINE_SUFFIX
 from ledapp import LEDApp
 
-mqtt = MQTTWebApplication(config, prefix=config['prefix'], online_suffix='device/connect', debug=True)
+mqtt = MQTTWebApplication(config, prefix=MQTT_PREFIX, online_suffix=ONLINE_SUFFIX, debug=True)
 APP = LEDApp(mqtt)
 
 
