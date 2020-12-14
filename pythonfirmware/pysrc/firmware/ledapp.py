@@ -2,6 +2,7 @@ from ledcontroller import LEDController
 from mqttapp import MQTTApplication, MQTTWebApplication
 from config import config, pinout
 from mqttapp.utils import schedule
+import uasyncio as asyncio
 
 
 class LEDApp:
@@ -11,12 +12,20 @@ class LEDApp:
         self.app = app
         self.rgbw = (0, 0, 0, 0xff)
         self.state = False
+        self.recovery = True
+        app.add_ready_callback(lambda: schedule(self._delay_recovery_end(20)))
 
     def update(self):
         if not self.state:
             self.leds.fill((0, 0, 0, 0))
         else:
             self.leds.fill(self.rgbw)
+
+    async def _delay_recovery_end(self, delay):
+        print("Ending recovery period in {} seconds".format(delay))
+        await asyncio.sleep(delay)
+        self.recovery = False
+        print("Ending recovery period ended.".format(delay))
 
     async def licht(self, fullTopic, topic, msg, retain):
         print("LICHT: {}  -> {}".format(topic, msg))
@@ -27,7 +36,7 @@ class LEDApp:
         else:
             verb = cmds[0]
             command = False
-        if command:
+        if command or self.recovery:
             if verb == "state":
                 self.state = msg == 'true'
                 self.update()

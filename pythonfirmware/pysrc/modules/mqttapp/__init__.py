@@ -23,6 +23,7 @@ class MQTTApplication:
         self.cfg = config
         self.should_stop = False
         self.subscribers = {}
+        self.started_callbacks = []
 
     async def loop(self):
         await asyncio.sleep_ms(100)
@@ -51,6 +52,9 @@ class MQTTApplication:
     def stop(self):
         # just a flag at this point
         self.should_stop = True
+
+    def add_ready_callback(self, cb):
+        self.started_callbacks.append(cb)
 
     def subscribe(self, filter: string, callback):
         if filter in self.subscribers.keys():
@@ -104,7 +108,8 @@ class MQTTApplication:
             schedule(self.publish(self.prefix+'device/ip', "{}".format(ip)))
             mac = ubinascii.hexlify(network.WLAN().config('mac'), ':').decode()
             schedule(self.publish(self.prefix+'device/mac', "{}".format(mac)))
-        pass
+        for cb in self.started_callbacks:
+            cb()
 
     async def _send_connect_msg(self):
         print("Sending Connect Notification")
@@ -124,5 +129,5 @@ class MQTTWebApplication(MQTTApplication):
         self.web.mount("/kernel", sysapp.app)
 
     async def cb_started(self):
-        super().cb_started()
+        await super().cb_started()
         self.web.run(host='0.0.0.0', port=self.web_port, debug=self.debug)
