@@ -27,8 +27,9 @@ class LEDApp:
             self.leds.fill(self.rgbw)
 
     def _end_recovery(self):
-        self.recovery = False
-        LOG.info("Ending recovery period ended.")
+        if self.recovery:
+            self.recovery = False
+            LOG.info("Ending recovery period ended.")
 
     async def _delay_recovery_end(self, delay):
         LOG.info("Ending recovery period in {} seconds".format(delay))
