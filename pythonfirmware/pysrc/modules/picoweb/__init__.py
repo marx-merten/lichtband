@@ -304,7 +304,7 @@ class WebApp:
         # (which are otherwise unhandled and will terminate a Picoweb app).
         # Note: name and signature of this method may change.
         loop.create_task(asyncio.start_server(self._handle, host, port))
-        loop.run_forever()
+        # loop.run_forever()
 
     def run(self, host="127.0.0.1", port=8081, debug=False, lazy_init=False, log=None):
         if log is None and debug >= 0:
