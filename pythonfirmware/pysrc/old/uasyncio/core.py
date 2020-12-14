@@ -9,6 +9,7 @@ type_gen = type((lambda: (yield))())
 DEBUG = 0
 log = None
 
+
 def set_debug(val):
     global DEBUG, log
     DEBUG = val
@@ -204,22 +205,29 @@ class SysCall:
         raise NotImplementedError
 
 # Optimized syscall with 1 arg
+
+
 class SysCall1(SysCall):
 
     def __init__(self, arg):
         self.arg = arg
 
+
 class StopLoop(SysCall1):
     pass
+
 
 class IORead(SysCall1):
     pass
 
+
 class IOWrite(SysCall1):
     pass
 
+
 class IOReadDone(SysCall1):
     pass
+
 
 class IOWriteDone(SysCall1):
     pass
@@ -227,16 +235,21 @@ class IOWriteDone(SysCall1):
 
 _event_loop = None
 _event_loop_class = EventLoop
+
+
 def get_event_loop(runq_len=16, waitq_len=16):
     global _event_loop
     if _event_loop is None:
         _event_loop = _event_loop_class(runq_len, waitq_len)
     return _event_loop
 
+
 def sleep(secs):
     yield int(secs * 1000)
 
 # Implementation of sleep_ms awaitable with zero heap memory usage
+
+
 class SleepMs(SysCall1):
 
     def __init__(self):
@@ -245,11 +258,11 @@ class SleepMs(SysCall1):
 
     def __call__(self, arg):
         self.v = arg
-        #print("__call__")
+        # print("__call__")
         return self
 
     def __iter__(self):
-        #print("__iter__")
+        # print("__iter__")
         return self
 
     def __next__(self):
@@ -261,6 +274,7 @@ class SleepMs(SysCall1):
         #print("__next__ syscall exit")
         _stop_iter.__traceback__ = None
         raise _stop_iter
+
 
 _stop_iter = StopIteration()
 sleep_ms = SleepMs()
@@ -325,6 +339,7 @@ def coroutine(f):
 # The functions below are deprecated in uasyncio, and provided only
 # for compatibility with CPython asyncio
 #
+
 
 def ensure_future(coro, loop=_event_loop):
     _event_loop.call_soon(coro)

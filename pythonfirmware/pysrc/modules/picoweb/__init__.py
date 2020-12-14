@@ -1,6 +1,7 @@
 # Picoweb web pico-framework for Pycopy, https://github.com/pfalcon/pycopy
 # Copyright (c) 2014-2020 Paul Sokolovsky
 # SPDX-License-Identifier: MIT
+import ulogging as logging
 import sys
 import gc
 import micropython
@@ -14,6 +15,8 @@ import pkg_resources
 from .utils import parse_qs
 
 SEND_BUFSZ = 128
+# Default Logging
+LOG = logging.getLogger(__name__)
 
 
 def get_mime_type(fname):
@@ -137,17 +140,12 @@ class WebApp:
                 qs = path[1]
             path = path[0]
 
-            # print("================")
-            #print(req, writer)
-            #print(req, (method, path, qs, proto), req.headers)
-
             # Find which mounted subapp (if any) should handle this request
             app = self
             while True:
                 found = False
                 for subapp in app.mounts:
                     root = subapp.url
-                    #print(path, "vs", root)
                     if path[:len(root)] == root:
                         app = subapp
                         found = True
@@ -210,7 +208,6 @@ class WebApp:
             else:
                 yield from start_response(writer, status="404")
                 yield from writer.awrite("404\r\n")
-            #print(req, "After response write")
         except Exception as e:
             if self.debug >= 0:
                 self.log.exc(e, "%.3f %s %s %r" % (utime.time(), req, writer, e))
@@ -287,7 +284,7 @@ class WebApp:
 
     def handle_static(self, req, resp):
         path = req.url_match.group(1)
-        print(path)
+        LOG.debug(path)
         if ".." in path:
             yield from http_error(resp, "403")
             return
@@ -321,6 +318,6 @@ class WebApp:
                 app.init()
         loop = asyncio.get_event_loop()
         if debug > 0:
-            print("* Running on http://%s:%s/" % (host, port))
+            LOG.debug("* Running on http://%s:%s/" % (host, port))
         self.serve(loop, host, port)
         # loop.close()

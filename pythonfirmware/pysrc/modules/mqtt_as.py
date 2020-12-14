@@ -17,13 +17,10 @@ import gc
 import usocket as socket
 import ustruct as struct
 
-gc.collect()
+# Default Logging
+import ulogging as logging
+LOG = logging.getLogger(__name__)
 
-gc.collect()
-
-gc.collect()
-
-gc.collect()
 
 VERSION = (0, 6, 0)
 
@@ -147,7 +144,7 @@ class MQTT_base:
 
     def dprint(self, *args):
         if self.DEBUG:
-            print(*args)
+            LOG.debug(*args)
 
     def _timeout(self, t):
         return ticks_diff(ticks_ms(), t) > self._response_time

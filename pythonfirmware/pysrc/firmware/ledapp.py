@@ -4,6 +4,10 @@ from config import config, pinout
 from mqttapp.utils import schedule
 import uasyncio as asyncio
 
+# Default Logging
+import ulogging as logging
+LOG = logging.getLogger(__name__)
+
 
 class LEDApp:
     def __init__(self, app: MQTTWebApplication):
@@ -22,13 +26,13 @@ class LEDApp:
             self.leds.fill(self.rgbw)
 
     async def _delay_recovery_end(self, delay):
-        print("Ending recovery period in {} seconds".format(delay))
+        LOG.info("Ending recovery period in {} seconds".format(delay))
         await asyncio.sleep(delay)
         self.recovery = False
-        print("Ending recovery period ended.".format(delay))
+        LOG.info("Ending recovery period ended.".format(delay))
 
     async def licht(self, fullTopic, topic, msg, retain):
-        print("LICHT: {}  -> {}".format(topic, msg))
+        LOG.debug("LICHT: {}  -> {}".format(topic, msg))
         cmds = topic.split('/')
         if (len(cmds) > 1):
             verb = cmds[0]

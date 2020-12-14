@@ -6,6 +6,10 @@ import network
 from picoweb import WebApp
 import web.web_sys as sysapp
 
+# Default Logging
+import ulogging as logging
+LOG = logging.getLogger(__name__)
+
 
 class MQTTApplication:
     def __init__(self, config, prefix="", online_suffix="", debug=False):
@@ -27,13 +31,13 @@ class MQTTApplication:
 
     async def loop(self):
         await asyncio.sleep_ms(100)
-        print("Connecting to MQQT ({}:{})".format(self.cfg['server'], self.cfg['port']))
+        LOG.info("Connecting to MQQT ({}:{})".format(self.cfg['server'], self.cfg['port']))
         await self.mqtt.connect()
-        print("DONE ({})".format(self.cfg['server']))
+        LOG.info("DONE ({})".format(self.cfg['server']))
         if self.online_topic != "":
             schedule(self._send_connect_msg())
         schedule(self.cb_started())
-        print("Done")
+        LOG.debug("Done")
 
     def run(self, cb=None):
         loop = asyncio.get_event_loop()
@@ -46,7 +50,7 @@ class MQTTApplication:
             self.mqtt.close()  # Prevent LmacRxBlk:1 errors
 
     async def publish(self, topic, msg):
-        print("Publish - {} -> {}".format(topic, msg))
+        LOG.debug("Publish - {} -> {}".format(topic, msg))
         await self.mqtt.publish(topic, msg)
 
     def stop(self):
@@ -75,7 +79,7 @@ class MQTTApplication:
         msg = msg_val.decode('ascii')
         if not topic.startswith('/'):
             topic = '/'+topic
-        print("{} set to {} ({})".format(topic, msg, retained))
+        LOG.debug("{} set to {} ({})".format(topic, msg, retained))
         processed = False
         for f in self.subscribers.keys():
             if not f.startswith('/'):
@@ -87,11 +91,11 @@ class MQTTApplication:
                 schedule(self.subscribers[f](topic, stopic, msg, retained))
                 processed = True
         if not processed:
-            print("...unprocessed")
+            LOG.debug("...unprocessed")
 
     # Basic Connect
     async def cb_connect(self, client: MQTTClient):
-        print("Register subscribers")
+        LOG.debug("Register subscribers")
         if self.prefix and self.prefix != "":
             await self.mqtt.subscribe(self.prefix+"#", qos=1)
         for k in self.subscribers.keys():
@@ -103,8 +107,8 @@ class MQTTApplication:
         if self.prefix and self.prefix != "":
             sta_if = network.WLAN(network.STA_IF)
             (ip, mask, _, dns) = sta_if.ifconfig()
-            print("-- IP Address : {} : {}".format(ip, mask))
-            print("-- DNS Server : {}".format(dns))
+            LOG.info("-- IP Address : {} : {}".format(ip, mask))
+            LOG.info("-- DNS Server : {}".format(dns))
             schedule(self.publish(self.prefix+'device/ip', "{}".format(ip)))
             mac = ubinascii.hexlify(network.WLAN().config('mac'), ':').decode()
             schedule(self.publish(self.prefix+'device/mac', "{}".format(mac)))
@@ -112,7 +116,7 @@ class MQTTApplication:
             cb()
 
     async def _send_connect_msg(self):
-        print("Sending Connect Notification")
+        LOG.info("Sending Connect Notification")
         await asyncio.sleep(1)
         await self.mqtt.publish(self.online_topic, 'true', qos=1)
 

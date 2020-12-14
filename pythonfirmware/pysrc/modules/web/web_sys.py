@@ -1,3 +1,4 @@
+import ulogging as logging
 import picoweb
 import uasyncio as asyncio
 import gc
@@ -11,6 +12,8 @@ from picoweb.utils import parse_qs
 
 
 app = picoweb.WebApp(__name__)
+# Default Logging
+LOG = logging.getLogger(__name__)
 
 
 async def _json_response(resp, data, code="200"):
@@ -30,7 +33,7 @@ async def _json_error(resp, error, msg=None, status="401", payload={}):
 
 
 async def delayed_reboot(delay):
-    print("Restarting in {}".format(delay))
+    LOG.critical("Restarting in {}".format(delay))
     await asyncio.sleep(delay)
     machine.reset()
 
@@ -95,12 +98,12 @@ last_checksum = ""
 @app.route("/ota/activate")
 async def ota_upload(req, resp):
     result = {'status': 'restart'}
-    print(req.headers.keys())
+    LOG.debug(req.headers.keys())
     if not b'X-OTA-CHECKSUM' in req.headers.keys():
         await _json_error(resp, "No Checksum", "checksum header required.")
         return
     csum = req.headers[b'X-OTA-CHECKSUM'].decode()
-    print(csum)
+    LOG.debug(csum)
     if csum != last_checksum:
         await _json_error(resp, "wrong Checksum", payload={"last_checksum": last_checksum})
         return
@@ -125,7 +128,7 @@ async def ota_upload(req, resp):
 
     checksum = sha256()
     (_, _, addr, _, label, _) = partition.info()
-    print("Write to partition {} ({})".format(label, addr))
+    LOG.info("Write to partition {} ({})".format(label, addr))
     oldbuf = b''
     while active:
         buffer = await r.read(blocksize)
@@ -138,26 +141,24 @@ async def ota_upload(req, resp):
                 buffer = oldbuf+buffer
                 oldbuf = b''
             while (len(buffer) >= blocksize):
-                # print("W")
                 write_buffer = buffer[:blocksize]
                 checksum.update(write_buffer)
                 buffer = buffer[blocksize:]
                 partition.writeblocks(block, write_buffer)
                 block += 1
             if len(buffer) > 0:
-                # print("Small Block detected {}, skip".format(len(buffer)))
                 oldbuf = buffer
 
             if tsize >= size:
                 blength = len(buffer)
                 if (blength > 0):
-                    print(blength)
+                    LOG.debug(blength)
                     checksum.update(buffer)
                     filler = bytearray(blocksize-blength)
                     for i in range(len(filler)):
                         filler[i] = 0xff
                     write_buffer = buffer+filler
-                    print(len(write_buffer))
+                    LOG.debug(len(write_buffer))
 
                     partition.writeblocks(block, write_buffer)
                     block += 1

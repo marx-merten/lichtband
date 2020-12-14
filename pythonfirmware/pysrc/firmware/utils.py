@@ -2,7 +2,7 @@ import time as utime
 import gc
 import uasyncio as asyncio
 import sys
-import logging
+import ulogging as logging
 
 LOG = logging.getLogger("utils")
 
@@ -31,7 +31,7 @@ def profiled_function(f, *args, **kwargs):
 
         gc.collect()
         mem2 = gc.mem_free()
-        print("--> Memory took {:n} Bytes --> total Memory Free({:n}B {:.2f}kB)".format(
+        LOG.debug("--> Memory took {:n} Bytes --> total Memory Free({:n}B {:.2f}kB)".format(
             mem1-mem2, mem2, mem2/1024))
         return result
     return new_func
@@ -46,7 +46,7 @@ def timed_function(f, *args, **kwargs):
         cnt += 1
         result = f(*args, **kwargs)
         delta = utime.ticks_diff(utime.ticks_us(), t)
-        print('{}: Function {} Time = {:6.3f}ms'.format(cnt, myname, delta/1000))
+        LOG.debug('{}: Function {} Time = {:6.3f}ms'.format(cnt, myname, delta/1000))
         if myname in __stats.keys():
             (c, t) = __stats[myname]
             __stats[myname] = (c+1, t+(delta/1000))
@@ -83,12 +83,12 @@ def clear_stats():
 def dump_stats():
     global __stats, cnt
 
-    print("Stats !!")
-    print("------------")
+    LOG.info("Stats !!")
+    LOG.info("------------")
     stats = {}
     for (k, v) in __stats.items():
         (c, t) = v
-        print("{:20s} : {:8.2f}ms ({} calls) {:.2f} ms/call".format(k, t, c, t/c))
+        LOG.info("{:20s} : {:8.2f}ms ({} calls) {:.2f} ms/call".format(k, t, c, t/c))
 
 
 def clean_memory(console: logging.Logger = None):

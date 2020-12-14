@@ -5,6 +5,7 @@ def unquote_plus(s):
     arr2 = [chr(int(x[:2], 16)) + x[2:] for x in arr[1:]]
     return arr[0] + "".join(arr2)
 
+
 def parse_qs(s):
     res = {}
     if s:
@@ -22,7 +23,3 @@ def parse_qs(s):
             else:
                 res[vals[0]] = vals[1]
     return res
-
-#print(parse_qs("foo"))
-#print(parse_qs("fo%41o+bar=+++1"))
-#print(parse_qs("foo=1&foo=2"))

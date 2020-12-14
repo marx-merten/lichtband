@@ -22,7 +22,6 @@ site = Server(__name__)
 
 @site.route("/")
 def index(req, resp):
-    print(req.method)
     yield from picoweb.start_response(resp)
     yield from resp.awrite("<h1> WELCOME</h1>")
 

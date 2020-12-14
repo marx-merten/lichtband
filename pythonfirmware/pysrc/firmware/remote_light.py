@@ -6,6 +6,11 @@ from mqtt_as import MQTTClient
 from neopixel import NeoPixel
 
 
+# Default Logging
+import ulogging as logging
+LOG = logging.getLogger(__name__)
+
+
 class LEDStrip:
     def __init__(self, pin_led, count):
         self.led = Pin(pin_led, Pin.OUT)
@@ -15,7 +20,7 @@ class LEDStrip:
         self.state = False
 
     def fill(self, color: tuple):
-        print("LED set to fill color {}".format(color))
+        LOG.debug("LED set to fill color {}".format(color))
         self.pixel.fill(color)
         return self
 
@@ -23,7 +28,7 @@ class LEDStrip:
         self.pixel.write()
 
     def set_state(self, new_state: boolean):
-        print(" STATE {} -> {}".format(self.state, new_state))
+        LOG.debug(" STATE {} -> {}".format(self.state, new_state))
         if new_state == self.state:
             return
         self.state = new_state
@@ -51,21 +56,21 @@ class MQTTLed:
 
     async def loop(self):
         await asyncio.sleep_ms(100)
-        print("Connecting to MQQT ({}:{})".format(self.config['server'], self.config['port']))
+        LOG.debug("Connecting to MQQT ({}:{})".format(self.config['server'], self.config['port']))
         await self.mqtt.connect()
-        print("DONE ({})".format(self.config['server']))
+        LOG.debug("DONE ({})".format(self.config['server']))
         await asyncio.sleep(2)
-        print("Sending Connect Notification")
+        LOG.debug("Sending Connect Notification")
         await asyncio.sleep(1)
         await self.mqtt.publish(self.online_topic, 'true', qos=1)
         if self.finish_cb:
             self.finish_cb()
-        print("Done")
+        LOG.debug("Done")
 
     async def publish(self, topic, msg):
-        print("Sending to {}".format(topic))
+        LOG.debug("Sending to {}".format(topic))
         await self.mqtt.publish(topic, msg, qos=1)
-        print("Done [{}]".format(msg))
+        LOG.debug("Done [{}]".format(msg))
 
     def close(self):
         self.mqtt.close()
