@@ -113,14 +113,7 @@ class LEDController:
         return (start, end)
 
     def _clean_color(self, color):
-        (r, g, b) = color
-        if r < 0:
-            r = 0
-        if g < 0:
-            g = 0
-        if b < 0:
-            b = 0
-        return (r, g, b)
+        return tuple(max(a, 0) for a in color)
 
     def _write(self, led_start, led_end, values):
         ledNum = led_start

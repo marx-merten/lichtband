@@ -78,9 +78,9 @@ class MQTTApplication:
                 filter = "/"+self.prefix+f
             else:
                 filter = f
-            print("Checking {}".format(filter))
             if topic.startswith(filter):
-                schedule(self.subscribers[f](topic, msg, retained))
+                stopic = topic[len(filter):]
+                schedule(self.subscribers[f](topic, stopic, msg, retained))
                 processed = True
         if not processed:
             print("...unprocessed")
