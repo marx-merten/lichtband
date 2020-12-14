@@ -15,6 +15,8 @@ class MQTTApplication:
     def __init__(self, config, prefix="", online_suffix="", debug=False):
         self.debug = debug
         MQTTClient.DEBUG = debug
+        if debug:
+            logging.getLogger('mqtt_as').setLevel(logging.DEBUG)
 
         config['subs_cb'] = self.cb_msg
         config['connect_coro'] = self.cb_connect
