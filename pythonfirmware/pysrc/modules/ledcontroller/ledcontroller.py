@@ -24,11 +24,15 @@ def calc_pos_difference_with_wrap(start: int, end: int):
 class LEDScene:
     def __init__(self):
         self.start_values = []
+        self.start_pixel = 0
+        self.length = 0
         self.fps = 20
         pass
 
-    def set_init_values(self,  init_values=None):
+    def set_init_values(self,  init_values=None, start_pixel=0):
         self.start_values = init_values
+        self.length = len(self.start_values)
+        self.start_pixel = start_pixel
 
     def set_fps(self, fps):
         self.fps = fps
@@ -54,20 +58,20 @@ class LEDScene:
         return int((ms/1000)*self.fps)
 
 
-class LEDSceneIterator(LEDScene):
-    def __init__(self):
-        super().__init__()
+# class LEDSceneIterator(LEDScene):
+#     def __init__(self):
+#         super().__init__()
 
-    def tickPixel(self, pixel, deltaFrames, currentValue, initValue):
-        pass
+#     def tickPixel(self, pixel, deltaFrames, currentValue, initValue):
+#         pass
 
-    def tick(self, deltaFrames: int, currentValues) -> list:
-        if not self.should_execute(deltaFrames):
-            return None
-        result = []
-        for (i, v) in enumerate(currentValues):
-            result.append(self.tickPixel(i, deltaFrames, v, self.start_values[i]))
-        return result
+#     def tick(self, deltaFrames: int, currentValues) -> list:
+#         if not self.should_execute(deltaFrames):
+#             return None
+#         result = []
+#         for (i, v) in enumerate(currentValues):
+#             result.append(self.tickPixel(i, deltaFrames, v, self.start_values[i]))
+#         return result
 
 
 class LEDSceneItem:
@@ -153,8 +157,7 @@ class LEDController:
             scene: LEDScene = item.scene
             deltaFrames = calc_pos_difference_with_wrap(item.init_frames, self.current_frame)
             if scene.should_execute(deltaFrames):
-                results = scene.tick(deltaFrames, self._get(item.start, item.end))
-                self._write(item.start, item.end, results)
+                scene.tick(deltaFrames, self._get(item.start, item.end))
                 dirty = True
             if scene.is_finished(deltaFrames):
                 remove_ids.append(index)
@@ -164,18 +167,28 @@ class LEDController:
         if dirty:
             self.pixel.write()
 
-    def fill(self, value, led=AREA_ALL):
+    def fill(self, value, led=AREA_ALL, update=False):
         (start, stop) = self._get_region(led)
         self._fill(start, stop, value)
-        self.pixel.write()
+        if update:
+            self.pixel.write()
 
-    def write(self, values, led=AREA_ALL):
+    def write(self, values, led=AREA_ALL, update=False):
         (start, stop) = self._get_region(led)
         if isinstance(values, list):
             self._write(start, stop, values)
         elif isinstance(values, tuple):
             self._fill(start, stop, values)
+        if update:
+            self.pixel.write()
+
+    def update(self):
         self.pixel.write()
+
+    def write_pixel(self, pixel, color=(0, 0, 0, 0), update=False):
+        self.pixel[pixel] = color
+        if update:
+            self.pixel.write()
 
     def add_scene(self, scene: LEDScene, restore_after_execution=True, region=AREA_ALL):
         # TODO Only allow areas
@@ -183,7 +196,8 @@ class LEDController:
         initValues = self._get(start, stop)
         item = LEDSceneItem(region, start, stop, self.current_frame, scene, restore_after_execution, initValues)
         item.scene.set_fps(self.fps)
-        item.scene.set_init_values(initValues)
+        item.scene.set_init_values(initValues, start_pixel=start)
+
         self.scenes.insert(0, item)
         LOG.debug("Added Scene {} to region [{}] ({},{})".format(scene, region, start, stop))
         return item
@@ -199,6 +213,7 @@ class LEDController:
             if self.base_color != old_base_color:
                 old_base_color = self.base_color
                 self.fill(self.base_color)
+                self.update()
                 old_frame = -1
 
             # DELAY
