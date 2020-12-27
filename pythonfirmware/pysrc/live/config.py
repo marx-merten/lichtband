@@ -14,7 +14,7 @@ config['ssid'] = 'mwThings'
 config['wifi_pw'] = 'S3cretThingz'
 
 config['server'] = '172.17.0.46'
-config['port'] = 9883
+config['port'] = 1883
 
 config['leds'] = 300
 

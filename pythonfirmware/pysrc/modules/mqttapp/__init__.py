@@ -16,6 +16,7 @@ class MQTTApplication:
         self.debug = debug
         MQTTClient.DEBUG = debug
         if debug:
+            LOG.setLevel(logging.DEBUG)
             logging.getLogger('mqtt_as').setLevel(logging.DEBUG)
 
         config['subs_cb'] = self.cb_msg
@@ -51,9 +52,9 @@ class MQTTApplication:
         finally:
             self.mqtt.close()  # Prevent LmacRxBlk:1 errors
 
-    async def publish(self, topic, msg):
+    async def publish(self, topic, msg, qos=0):
         LOG.debug("Publish - {} -> {}".format(topic, msg))
-        await self.mqtt.publish(topic, msg)
+        await self.mqtt.publish(topic, msg, qos=qos)
 
     def stop(self):
         # just a flag at this point
@@ -99,7 +100,7 @@ class MQTTApplication:
     async def cb_connect(self, client: MQTTClient):
         LOG.debug("Register subscribers")
         if self.prefix and self.prefix != "":
-            await self.mqtt.subscribe(self.prefix+"#", qos=1)
+            await self.mqtt.subscribe(self.prefix+"#", qos=0)
         for k in self.subscribers.keys():
             if k.startswith('/'):
                 pass

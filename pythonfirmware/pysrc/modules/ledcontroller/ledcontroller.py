@@ -1,8 +1,10 @@
 import ulogging as logging
 from machine import Pin
 from neopixel import NeoPixel
-import uasyncio
+import uasyncio as asyncio
 import sys
+import utime
+import gc
 
 AREA_ALL = ':'
 
@@ -80,15 +82,17 @@ class LEDSceneItem:
 
 
 class LEDController:
-    def __init__(self, led, fps=20, bpp=3, pixel=0):
+    def __init__(self, led, fps=10, bpp=3, pixel=0, tick_cb=None):
         pled = Pin(led, Pin.OUT)
         self.pixelcount = pixel
         self.pixel = NeoPixel(pled, pixel, bpp=bpp)   # create NeoPixel driver on GPIO0 for 8 pixels
-        # self.pixel.fill((0, 0, 0, 0))
-        # self.pixel.write()
+        self.pixel.fill((0,)*bpp)
+        self.pixel.write()
+        self.base_color = (0,)*bpp
         self.fps = fps
         self.current_frame = 0
-        uasyncio.get_event_loop().create_task(self.tick())
+        asyncio.get_event_loop().create_task(self.tick())
+        self.tick_cb = tick_cb
         self.scenes = []
 
     def _get_region(self, region):
@@ -185,7 +189,27 @@ class LEDController:
         return item
 
     async def tick(self):
+        old_base_color = self.base_color
+        old_frame = -1
         while True:
+
+            # TODO: Exec Scenes
+
+            # IF NOT SCENE execute on base color but potentially delay for rapid changes
+            if self.base_color != old_base_color:
+                old_base_color = self.base_color
+                self.fill(self.base_color)
+                old_frame = -1
+
+            # DELAY
+            t = utime.ticks_ms()
             self.current_frame += 1
             self._tick_scenes()
-            await uasyncio.sleep_ms(1000//self.fps)
+            d = 1000//self.fps
+            realDelay = (t+d)-utime.ticks_ms()
+            realDelay = min(realDelay, d)
+
+            if self.tick_cb != None:
+                self.tick_cb(self.current_frame, realDelay)
+            await asyncio.sleep_ms(realDelay)
+            # probably good enough
