@@ -12,7 +12,7 @@ LOG = logging.getLogger(__name__)
 
 class LEDApp:
     def __init__(self, app: MQTTWebApplication):
-        self.leds = LEDController(pinout.PIN_LED1, bpp=4, pixel=300, tick_cb=self.tick_cb, fps=20)
+        self.leds = LEDController(pinout.PIN_LED1, bpp=4, pixel=300, tick_cb=self.tick_cb, fps=30)
         app.subscribe('licht/', self.licht)
         self.app = app
         self.rgbw = (0, 0, 0, 0xff)

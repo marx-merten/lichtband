@@ -2,6 +2,7 @@ import ulogging as logging
 from machine import Pin
 from neopixel import NeoPixel
 import uasyncio as asyncio
+from utils import timed_function
 import sys
 import utime
 import gc
@@ -29,15 +30,16 @@ class LEDScene:
         self.fps = 20
         pass
 
-    def set_init_values(self,  init_values=None, start_pixel=0):
+    def set_init_values(self,  init_values=None, start_pixel=0, controller: LEDController = None):
         self.start_values = init_values
         self.length = len(self.start_values)
         self.start_pixel = start_pixel
+        self.controller = controller
 
     def set_fps(self, fps):
         self.fps = fps
 
-    def tick(self, deltaFrames: int, currentValues) -> list:
+    def tick(self, deltaFrames: int) -> list:
         pass
 
     def should_execute(self, delta_frames) -> boolean:
@@ -55,7 +57,7 @@ class LEDScene:
         return frames
 
     def convert_to_frames_ms(self, ms):
-        return int((ms/1000)*self.fps)
+        return max(1, int((ms/1000)*self.fps))
 
 
 # class LEDSceneIterator(LEDScene):
@@ -137,6 +139,7 @@ class LEDController:
             result.append(self.pixel[ledNum])
         return result
 
+    # TODO:Make fasterrrrrrrr
     def _fill(self, led_start, led_end, value):
         for ledNum in range(led_start, led_end+1):
             self.pixel[ledNum] = self._clean_color(value)
@@ -157,7 +160,7 @@ class LEDController:
             scene: LEDScene = item.scene
             deltaFrames = calc_pos_difference_with_wrap(item.init_frames, self.current_frame)
             if scene.should_execute(deltaFrames):
-                scene.tick(deltaFrames, self._get(item.start, item.end))
+                scene.tick(deltaFrames)
                 dirty = True
             if scene.is_finished(deltaFrames):
                 remove_ids.append(index)
@@ -166,7 +169,11 @@ class LEDController:
                 dirty = True
         if dirty:
             self.pixel.write()
+            return True
+        else:
+            return False
 
+    # @timed_function
     def fill(self, value, led=AREA_ALL, update=False):
         (start, stop) = self._get_region(led)
         self._fill(start, stop, value)
@@ -196,7 +203,7 @@ class LEDController:
         initValues = self._get(start, stop)
         item = LEDSceneItem(region, start, stop, self.current_frame, scene, restore_after_execution, initValues)
         item.scene.set_fps(self.fps)
-        item.scene.set_init_values(initValues, start_pixel=start)
+        item.scene.set_init_values(initValues, start_pixel=start, controller=self)
 
         self.scenes.insert(0, item)
         LOG.debug("Added Scene {} to region [{}] ({},{})".format(scene, region, start, stop))
@@ -206,20 +213,18 @@ class LEDController:
         old_base_color = self.base_color
         old_frame = -1
         while True:
+            t = utime.ticks_ms()
 
-            # TODO: Exec Scenes
-
-            # IF NOT SCENE execute on base color but potentially delay for rapid changes
-            if self.base_color != old_base_color:
-                old_base_color = self.base_color
-                self.fill(self.base_color)
-                self.update()
-                old_frame = -1
+            if not self._tick_scenes():
+                # IF NOT SCENE execute on base color but potentially delay for rapid changes
+                if self.base_color != old_base_color:
+                    old_base_color = self.base_color
+                    self.fill(self.base_color)
+                    self.update()
+                    old_frame = -1
 
             # DELAY
-            t = utime.ticks_ms()
             self.current_frame += 1
-            self._tick_scenes()
             d = 1000//self.fps
             realDelay = (t+d)-utime.ticks_ms()
             realDelay = min(realDelay, d)
