@@ -3,7 +3,7 @@ find . -name "__pycache__" -type d -prune -exec rm -rf '{}' '+'
 
 . ./environment.sh
 
-pushd ${curdir}/../../../environments/micropython/ports/esp32
+pushd ${MICROPYTHON_DIR}/ports/esp32
 
 echo "building"
 make -j8 $*
