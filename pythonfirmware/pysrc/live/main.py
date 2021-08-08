@@ -5,7 +5,7 @@ from ledapp import LEDApp
 from utils import create_repeat_routine
 from mqttapp.utils import schedule
 import uasyncio as asyncio
-from testscenen import BlinkScene, RunlightScene
+from testscenen import BlinkScene, RunlightScene, BlockLauflicht
 from utils import LOG as UTIL_LOG
 
 import gc
@@ -23,13 +23,14 @@ create_repeat_routine(gc.collect, 30000)
 
 
 async def starteScene1():
-    await asyncio.sleep(5)
+    await asyncio.sleep(3)
     LOG.info("STARTE SZENEN")
-    # bl = BlinkScene()
-    # APP.leds.add_scene(bl)
+
     ll = RunlightScene()
-    APP.leds.add_scene(ll, region="0:55")
-# schedule(starteScene1())
+    farbmuster = [(200, 0, 0, 0)]*15+[(0, 0, 200, 0)]*15
+    ll = BlockLauflicht(muster=farbmuster, steps_per_second=30, speed=3)
+    APP.leds.add_scene(ll, region=":")
+schedule(starteScene1())
 
 UTIL_LOG.setLevel(logging.DEBUG)
 LOG.info("STARTING WEB APP")

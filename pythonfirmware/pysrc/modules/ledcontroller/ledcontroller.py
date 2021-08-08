@@ -153,7 +153,6 @@ class LEDController:
             return False
 
     def _tick_scenes(self):
-        # TODO only execute first Scene for Area
         remove_ids = []
         dirty = False
         for (index, item) in enumerate((self.scenes)):
@@ -193,6 +192,7 @@ class LEDController:
         self.pixel.write()
 
     def write_pixel(self, pixel, color=(0, 0, 0, 0), update=False):
+        # LOG.info("Pixel {} auf {}".format(pixel, color))
         self.pixel[pixel] = color
         if update:
             self.pixel.write()

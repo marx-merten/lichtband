@@ -6,6 +6,8 @@ curdir=$(pwd)
 
 export MICROPYTHON_DIR=${curdir}/../../../environments/micropython-master
 export ESPIDF=${curdir}/../../../environments/esp32/espidf4
+# export MICROPYTHON_DIR=${curdir}/../../../environments/micropython
+#export ESPIDF=${curdir}/../../../environments/esp32/espidf3
 export IDF_PATH=${ESPIDF}
 . ${ESPIDF}/export.sh
 
