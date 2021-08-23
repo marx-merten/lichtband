@@ -1,10 +1,20 @@
 
 
 import cfled
+import uasyncio
+import time as utime
+
+from machine import Pin
+
+pinDebug1=Pin(25,Pin.OUT)
+pinDebug2=Pin(26,Pin.OUT)
+pinDebug1.value(0)
+pinDebug2.value(0)
 
 # Default Logging
 import ulogging as logging
 LOG = logging.getLogger(__name__)
+
 
 
 class Band:
@@ -47,6 +57,7 @@ class Band:
             scene = self.scenes[name]
             scene.activate(self)
             self.activeScene=scene
+            self.sceneFrame=0
 
 
     def update(self):
@@ -74,12 +85,43 @@ class Band:
         if self.ledSaved is not None:
             self.leds.restore(self.ledSaved)
 
+    async def tick(self):
+        fc=0
+        while True:
+            fc+=1
+            pinDebug1.value(fc%2)
+
+            fps=5
+            ticksBefore=utime.ticks_ms()
+
+            if self.isActiveScene():
+                if self.state:
+                    fps=self.activeScene.getFPS()
+                    pinDebug2.value(1)
+                    self.activeScene.frame(self.sceneFrame)
+                    self.leds.display()
+                    pinDebug2.value(0)
+                    self.sceneFrame+=1
+            else:
+                self.update()
+            ticksAfter=utime.ticks_ms()
+
+            currentWait = utime.ticks_diff(ticksAfter,ticksBefore)
+            targetWait = 1000//fps
+            realWait = targetWait-currentWait
+            # TODO use gpio to signal states and timing
+            if realWait <0 :
+                realWait=10
+
+
+            await uasyncio.sleep_ms(realWait)
+
 class BaseScene:
     def __init__(self):
         self.band = None
 
     def getFPS(self):
-        return 25
+        return 20
 
     def getName(self):
         return "__BASE Scene"
