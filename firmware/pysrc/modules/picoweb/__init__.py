@@ -14,7 +14,7 @@ import pkg_resources
 
 from .utils import parse_qs
 
-SEND_BUFSZ = 128
+SEND_BUFSZ = 2048
 # Default Logging
 LOG = logging.getLogger(__name__)
 
@@ -26,6 +26,8 @@ def get_mime_type(fname):
         return "text/html"
     if fname.endswith(".css"):
         return "text/css"
+    if fname.endswith(".js"):
+        return "application/javascript"
     if fname.endswith(".png") or fname.endswith(".jpg"):
         return "image"
     return "text/plain"
@@ -36,6 +38,7 @@ def sendstream(writer, f):
     while True:
         l = f.readinto(buf)
         if not l:
+            print("done")
             break
         yield from writer.awrite(buf, 0, l)
 
@@ -269,7 +272,7 @@ class WebApp:
         tmpl = self._load_template(tmpl_name)
         return ''.join(tmpl(*args))
 
-    def sendfile(self, writer, fname, content_type=None, headers=None):
+    def sendresource(self, writer, fname, content_type=None, headers=None):
         if not content_type:
             content_type = get_mime_type(fname)
         try:
@@ -282,13 +285,28 @@ class WebApp:
             else:
                 raise
 
+    def sendfile(self, writer, fname, content_type=None, headers=None):
+        if not content_type:
+            content_type = get_mime_type(fname)
+        try:
+            with open(fname) as f :
+                print("sending {}".format(fname))
+                yield from start_response(writer, content_type, "200", headers)
+                yield from sendstream(writer, f)
+                f.close()
+        except OSError as e:
+            if e.args[0] == uerrno.ENOENT:
+                yield from http_error(writer, "404")
+            else:
+                raise
+
     def handle_static(self, req, resp):
         path = req.url_match.group(1)
         LOG.debug(path)
         if ".." in path:
             yield from http_error(resp, "403")
             return
-        yield from self.sendfile(resp, path)
+        yield from self.sendresource(resp, path)
 
     def init(self):
         """Initialize a web application. This is for overriding by subclasses.

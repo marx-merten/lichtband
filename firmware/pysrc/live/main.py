@@ -2,7 +2,12 @@ from mqttapp import MQTTApplication, MQTTWebApplication
 from mqttapp.utils import schedule
 from config import config, pinout, MQTT_PREFIX, ONLINE_SUFFIX, NAME
 from utils import create_repeat_routine,isCommand,str_to_bool
+from picoweb import http_error
 import uasyncio as asyncio
+import os
+import gc
+import re
+
 
 import ledstrip
 import machine
@@ -13,7 +18,6 @@ import ubinascii
 import network
 from fileconfig import Config
 
-import gc
 
 # Default Logging
 import ulogging as logging
@@ -31,8 +35,33 @@ mqtt = MQTTWebApplication(config,
                           prefix=cfg.get('mqtt/prefix')+cfg.get('mqtt/name')+"/",  online_suffix=cfg.get('mqtt/online'), debug=False, device_prefix="device/{}/".format(mac))
 
 
-# make sure regular memory cleanup
-# create_repeat_routine(gc.collect, 30000)
+
+# Mount catchall clause, any more defined url need to be mapped before this
+def handle_html( req, resp):
+    path = req.url_match.group(1)
+    if len(path)==0:
+        path="index.html"
+    if path[-1] == '/' :
+        path=path+"index.html"
+
+    path = "/html/"+path
+    # check for existing files AND dir
+    try:
+        t_mod=os.stat(path)[0]
+        if t_mod==0o040000 :
+            #File is dir, add index.html
+            path=path+"/index.html"
+    except OSError:
+        print ("File Error")
+        yield from http_error(resp, "404")
+        return
+
+    if ".." in path:
+        yield from http_error(resp, "403")
+        return
+    yield from mqtt.web.sendfile(resp, path)
+
+mqtt.web.add_url_rule(re.compile("^/(.*)"),handle_html)
 
 # Connect licht values to controll flow
 try:
@@ -46,7 +75,7 @@ async def controllLightState(topic, stopic, msg, retained):
     if topic.endswith("/set"):
         lichtband.set(state=str_to_bool(msg))
         lichtband.update()
-        await mqtt.publish(topic[:-4],msg)
+        await sendState()
 
 async def controllLightRGBW(topic, stopic, msg, retained):
     if topic.endswith("/set"):
@@ -55,30 +84,63 @@ async def controllLightRGBW(topic, stopic, msg, retained):
             colors.append(int(o))
         lichtband.set(rgbw=tuple(colors))
         lichtband.update()
-        await mqtt.publish(topic[:-4],msg)
+        await sendState()
+
+async def controllScene(topic, stopic, msg, retained):
+    if topic.endswith("/set"):
+        scene=msg
+        lichtband.activateScene(scene)
+        lichtband.set(state=True)
+        await sendState()
 
 
 mqtt.subscribe("licht/state",controllLightState)
 mqtt.subscribe("licht/rgbw",controllLightRGBW)
+mqtt.subscribe("licht/scene",controllScene)
 
+
+async def sendState():
+    v="true" if lichtband.state else "false"
+    await mqtt.publish(mqtt.prefix+"licht/state",v)
+    await mqtt.publish(mqtt.prefix+"licht/rgbw",",".join([str(i) for i in lichtband.rgbw]))
+    scenenName="None"
+    if lichtband.isActiveScene() :
+        scenenName=lichtband.activeScene.getName()
+    await mqtt.publish(mqtt.prefix+"licht/scene",scenenName)
+
+    await mqtt.publish(mqtt.prefix+"device/scenes",",".join([ m for m in lichtband.scenes]))
 
 
 async def initialSync():
     asyncio.sleep_ms(1000)
-    v="true" if lichtband.state else "false"
-    await mqtt.publish(mqtt.prefix+"licht/state",v)
-    await mqtt.publish(mqtt.prefix+"licht/rgbw",",".join([str(i) for i in lichtband.rgbw]))
+    await sendState()
 
+def starteTick():
+    schedule(lichtband.tick())
 
 
 boot=Boot(lichtband)
 mqtt.add_ready_callback(boot.updateReady)
 mqtt.add_ready_callback(lambda: schedule(initialSync()))
+mqtt.add_ready_callback(starteTick)
 
-import scenes.basic as scene
-print("Doing it")
-scene.register(lichtband)
-print(lichtband.scenes)
+
+
+modules = list(filter(lambda name:name.endswith(".py"),os.listdir("scenes/")))
+importnames = [ "scenes.{}".format(name[:-3]) for name in modules]
+for mname in importnames:
+    try:
+        exec ("import {} as m\nm.register(lichtband)".format(mname))
+    except Exception as e:
+        print("Error while loading Module {}".format(mname))
+        print (e)
+
+
+
+
+
+
+
 LOG.info("STARTING WEB APP")
 # Starting main app main loop. Mqqt will manage the events and event-loop
 mqtt.run()
