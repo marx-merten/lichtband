@@ -1,5 +1,4 @@
-
-module.exports = {
+const colors={
     "red": {
         "50": "#ffebee",
         "100": "#ffcdd2",
@@ -315,3 +314,5 @@ module.exports = {
         "inactive": "rgba(255, 255, 255, 0.5)"
     }
 }
+
+module.exports = colors

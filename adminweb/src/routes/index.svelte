@@ -1,5 +1,10 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
-<hr/>
+<script lang="ts">
+    import { goto } from '$app/navigation';
 
-<p class="bg-red-500">JSHJDKF</p>
+    import { onMount } from 'svelte';
+
+
+onMount(async () => {
+    goto("/light")
+});
+  </script>

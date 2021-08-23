@@ -14,6 +14,30 @@ const config = {
 	kit: {
 		// hydrate the <div id="svelte"> element in src/app.html
 		target: '#svelte',
+		ssr: false,
+		prerender: {
+			enabled: false
+		  },
+		adapter: adapter({
+			// default options are shown
+			pages: 'build',
+			assets: 'build',
+			fallback: 'index.html'
+		})
+	}
+};
+
+const configSSR = {
+	// Consult https://github.com/sveltejs/svelte-preprocess
+	// for more information about preprocessors
+	preprocess: [preprocess({
+        "postcss": true
+    })],
+
+	kit: {
+		// hydrate the <div id="svelte"> element in src/app.html
+		target: '#svelte',
+
 		adapter: adapter({
 			// default options are shown
 			pages: 'build',
@@ -23,4 +47,4 @@ const config = {
 	}
 };
 
-export default config;
+export default configSSR;

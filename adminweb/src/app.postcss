@@ -1,7 +1,7 @@
 @tailwind base;
 /* Write your global styles here, in PostCSS syntax */
 
-h1 {
+  h1 {
     @apply text-2xl;
   }
   h2 {
@@ -10,8 +10,16 @@ h1 {
   h3 {
     @apply text-lg;
   }
-  a {
-    @apply text-blue-600 underline;
-  }
+
 @tailwind components;
-@tailwind utilities
+@tailwind utilities;
+
+/* Rules for sizing the icon. */
+.material-icons.md-18 { font-size: 18px; }
+.material-icons.md-24 { font-size: 24px; }
+.material-icons.md-36 { font-size: 36px; }
+.material-icons.md-48 { font-size: 48px; }
+
+html, body,#sapper{
+    @apply h-full max-h-full
+}

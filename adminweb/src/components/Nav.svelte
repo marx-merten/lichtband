@@ -17,14 +17,12 @@
   let showDlg = false;
   const cssItem = "overflow-hidden overflow-ellipsis w-14 h-12 justify-end text-theme-onPrimaryInactive";
   const cssItemSelected = "overflow-hidden overflow-ellipsis w-14 text-theme-secondary   h-12 justify-end";
-  $: console.log("NAV", vertical);
 </script>
 
 {#if vertical}
   <nav class="flex flex-col h-full w-full justify-start items-end {clazz}">
     <div class="h-32 flex flex-col pr-4 pt-8 ">
       <Icon icon="dvr" size="xl" class="self-end " />
-      <div class="transform origin-top-left -rotate-90 translate-x-3 translate-y-4 italic font-bold">EPG@Home</div>
     </div>
     {#each routes as route}
       <a href={route.path}>
