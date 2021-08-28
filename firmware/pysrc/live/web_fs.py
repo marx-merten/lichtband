@@ -26,30 +26,44 @@ BUFFERSIZE = 1024*16
 corsHeader={'Access-Control-Allow-Origin':'*'}
 
 
+
 def convert_to_ISOTime(time_val):
     (year,month,day,hour,minute,second,_,_) = time.gmtime(time_val)
     return "{}-{}-{}T{}:{}:{}Z".format(year,month,day,hour,minute,second)
+
+
+def _recurse_path(path,level=0 ,recurse=True):
+    try:
+        dirs=[]
+        for f in os.listdir(path):
+            fileinfo ={}
+            fileinfo['name']=path+f
+            stats = os.stat(fileinfo['name'])
+            fileinfo['depth']=level
+
+
+            fileinfo['timestamp']=int(stats[8])
+            fileinfo['time']=convert_to_ISOTime(fileinfo['timestamp'])
+            if stats[0] == S_IFREG:
+                fileinfo['type']='f'
+                fileinfo['size']=int(stats[6])
+                dirs.append(fileinfo)
+            elif stats[0] == S_IFDIR:
+                fileinfo['type']='d'
+                fileinfo['size']=0
+                dirs.append(fileinfo)
+                if recurse:
+                    dirs+=_recurse_path(fileinfo['name']+'/',level+1)
+        return dirs
+    except OSError:
+        return []
 
 
 
 async def fs_dir_list(req,resp,path):
     result = []
     try:
-        for filename in os.listdir(path):
-            filedata={}
-            separator = "" if path[-1]=="/" else "/"
-            filedata['name']=path+separator+filename
-            stats = os.stat(filedata['name'])
-            filedata['type']="f" if stats[0] == S_IFREG else "d"
-            if filedata['type'] == "f" :
-                filedata['size']=int(stats[6])
-            else :
-                filedata['size']=0
-
-
-            filedata['timestamp']=int(stats[8])
-            filedata['time']=convert_to_ISOTime(filedata['timestamp'])
-            result.append(filedata)
+        result = _recurse_path(path,recurse=False)
         await _json_response(resp,result,headers=corsHeader)
     except OSError:
         LOG.error("Error while retrieving directory")
@@ -57,6 +71,12 @@ async def fs_dir_list(req,resp,path):
 
 
 async def fs_dir_delete(req,resp,path):
+    # if recurse is whished something like this
+    # [d['name'] for d in list(filter(lambda info:info['type'] == 'f',dat))]
+    # followed by sorted(dat, key= lambda info:info['depth'],reverse=True)
+    # with rmdir on all dirs
+    # Depth first
+
     try:
         os.rmdir(path)
         await _json_response(resp,{'deletedPath':path},headers=corsHeader)
@@ -99,24 +119,6 @@ def _file_type(path):
         return None
 
 
-def _recurse_path(path,level=0):
-    try:
-        dirs=[]
-        for f in os.listdir(path):
-            stats = os.stat(path)
-            fileinfo ={}
-            fileinfo['path']=path+'/'+f
-            fileinfo['depth']=level
-            if stats[0] == S_IFREG:
-                fileinfo['mode']='f'
-                dirs.append(fileinfo)
-            if stats[0] == S_IFDIR:
-                fileinfo['mode']='d'
-                dirs.append(fileinfo)
-                dirs+=_recurse_path(fileinfo['path'],level+1)
-        return dirs
-    except OSError:
-        return []
 
 @app.route(re.compile("/tree(/.*)"))
 async def fs_tree(req, resp):
