@@ -12,6 +12,8 @@ import re
 import ledstrip
 import machine
 import time
+import web_fs as web_filesystem
+
 from bootup import Boot
 
 import ubinascii
@@ -62,6 +64,9 @@ def handle_html( req, resp):
     yield from mqtt.web.sendfile(resp, path)
 
 mqtt.web.add_url_rule(re.compile("^/(.*)"),handle_html)
+
+# mount FS
+mqtt.web.mount("/fs",web_filesystem.app)
 
 # Connect licht values to controll flow
 try:
