@@ -9,7 +9,7 @@ import machine
 import esp32
 import uos
 from picoweb.utils import parse_qs
-
+from web.utils import _json_error,_json_msg,_json_response,_txt_response
 
 app = picoweb.WebApp(__name__)
 # Default Logging
@@ -17,25 +17,7 @@ LOG = logging.getLogger(__name__)
 
 corsHeader={'Access-Control-Allow-Origin':'*'}
 
-async def _txt_response(resp, data, code="200", content_type="text/plain"):
-    await picoweb.start_response(resp, content_type=content_type, status=code)
-    await resp.awrite(data)
 
-
-async def _json_response(resp, data, code="200",headers={}):
-    await picoweb.start_response(resp, content_type="application/json", status=code,headers=headers)
-    await resp.awrite(ujson.dumps(data))
-
-
-async def _json_error(resp, error, msg=None, status="401", payload={}):
-    data = {'code': status,
-            'error': error}
-    if (msg):
-        data['message'] = msg
-    for k in payload.keys():
-        data[k] = payload[k]
-
-    await _json_response(resp, data, status)
 
 
 async def delayed_reboot(delay):
@@ -43,15 +25,6 @@ async def delayed_reboot(delay):
     await asyncio.sleep(delay)
     machine.reset()
 
-
-async def _json_msg(resp, subject, msg=None, status="200", payload={}):
-    data = {'code': status,
-            'msg': subject}
-    if (msg):
-        data['long_msg'] = msg
-    for k in payload.keys():
-        data[k] = payload[k]
-    await _json_response(resp, data, status)
 
 
 @app.route("/dump")
