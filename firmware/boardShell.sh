@@ -1,5 +1,5 @@
 #!/bin/bash
-. ./environment.sh
+. ./environment.sh >>/dev/null
 
 echo "Choosen $PORT"
 rshell -p ${PORT} $*
