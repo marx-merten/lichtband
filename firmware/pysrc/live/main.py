@@ -3,6 +3,7 @@ from mqttapp.utils import schedule
 from config import config, pinout, MQTT_PREFIX, ONLINE_SUFFIX, NAME
 from utils import create_repeat_routine,isCommand,str_to_bool
 from picoweb import http_error
+from web_light import LightWeb
 import uasyncio as asyncio
 import os
 import gc
@@ -12,7 +13,7 @@ import re
 import ledstrip
 import machine
 import time
-import web_fs as web_filesystem
+import web.web_fs as web_filesystem
 
 from bootup import Boot
 
@@ -65,8 +66,7 @@ def handle_html( req, resp):
 
 mqtt.web.add_url_rule(re.compile("^/(.*)"),handle_html)
 
-# mount FS
-mqtt.web.mount("/fs",web_filesystem.app)
+
 
 # Connect licht values to controll flow
 try:
@@ -75,6 +75,9 @@ except OSError:
     print("Error in sequence, while creating lightstrip data, restart in 5")
     time.sleep_ms(5000)
     machine.reset()
+
+
+
 
 async def controllLightState(topic, stopic, msg, retained):
     if topic.endswith("/set"):
@@ -144,6 +147,14 @@ for mname in importnames:
 
 
 
+# mount FS
+mqtt.web.mount("/fs",web_filesystem.app)
+
+def webUpdate():
+    schedule(sendState())
+
+lightWeb=LightWeb(lichtband,cb_update=webUpdate)
+lightWeb.register(mqtt.web)
 
 
 LOG.info("STARTING WEB APP")
