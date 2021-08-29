@@ -11,6 +11,10 @@ import uos
 from picoweb.utils import parse_qs
 from web.utils import _json_error,_json_msg,_json_response,_txt_response
 
+
+import utime as time
+
+
 app = picoweb.WebApp(__name__)
 # Default Logging
 LOG = logging.getLogger(__name__)
@@ -18,6 +22,10 @@ LOG = logging.getLogger(__name__)
 corsHeader={'Access-Control-Allow-Origin':'*'}
 
 
+
+def convert_to_ISOTime(time_val):
+    (year, month, day, hour, minute, second, _, _) = time.gmtime(time_val)
+    return "{}-{}-{}T{}:{}:{}Z".format(year, month, day, hour, minute, second)
 
 
 async def delayed_reboot(delay):
@@ -66,6 +74,8 @@ async def stats(req, resp):
           'avail': (free*bsize),
           'avail_blocks': free}
     result['fs'] = fs
+    result['timestamp']= convert_to_ISOTime(time.time())
+
     await _json_response(resp, result,headers=corsHeader)
 
 

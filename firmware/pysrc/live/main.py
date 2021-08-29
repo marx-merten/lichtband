@@ -13,6 +13,8 @@ import re
 import ledstrip
 import machine
 import time
+import ntptime
+
 import web.web_fs as web_filesystem
 
 from bootup import Boot
@@ -121,6 +123,7 @@ async def sendState():
 
 async def initialSync():
     asyncio.sleep_ms(1000)
+    ntptime.settime()
     await sendState()
 
 def starteTick():
