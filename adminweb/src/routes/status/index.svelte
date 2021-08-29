@@ -5,7 +5,7 @@
 	let statusJson = {};
 	import { onMount } from 'svelte';
 	function update_stats() {
-		fetch_api('kernel/stats').then((dat) => {
+		fetch_api('api/kernel/stats').then((dat) => {
 			statusJson = dat;
 			status = JSON.stringify(dat, null, 4); // Indented 4 spaces
 		});

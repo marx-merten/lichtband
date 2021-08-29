@@ -143,7 +143,7 @@ class MQTTWebApplication(MQTTApplication):
         super().__init__(config, prefix=prefix, online_suffix=online_suffix, debug=debug, device_prefix=device_prefix)
         self.web_port = web_port
         self.web = WebApp(__name__)
-        self.web.mount("/kernel", sysapp.app)
+        self.web.mount("/api/kernel", sysapp.app)
 
     async def cb_started(self):
         await super().cb_started()

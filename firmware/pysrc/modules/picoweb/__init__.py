@@ -38,7 +38,6 @@ def sendstream(writer, f):
     while True:
         l = f.readinto(buf)
         if not l:
-            print("done")
             break
         yield from writer.awrite(buf, 0, l)
 
@@ -290,7 +289,7 @@ class WebApp:
             content_type = get_mime_type(fname)
         try:
             with open(fname) as f :
-                print("sending {}".format(fname))
+                LOG.debug("sending {}".format(fname))
                 yield from start_response(writer, content_type, "200", headers)
                 yield from sendstream(writer, f)
                 f.close()

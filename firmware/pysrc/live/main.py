@@ -167,7 +167,7 @@ for mname in importnames:
 
 
 # mount FS
-mqtt.web.mount("/fs",web_filesystem.app)
+mqtt.web.mount("/api/fs",web_filesystem.app)
 
 def webUpdate():
     schedule(sendState())

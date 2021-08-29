@@ -63,4 +63,4 @@ class LightWeb:
             await _json_response(resp,{'switchedScene':scene},headers=corsHeader)
 
     def register(self,server):
-        server.mount("/light",self.app)
+        server.mount("/api/light",self.app)

@@ -16,19 +16,19 @@
 
 
 	function update() {
-		fetch_api('light/status').then((state: any) => {
+		fetch_api('api/light/status').then((state: any) => {
 			status = state;
 		});
 	}
 
     function toggle(){
         const newState=status.state?"False":"True"
-        fetch_api('light/switch?state='+newState).then( ()=>{
+        fetch_api('api/light/switch?state='+newState).then( ()=>{
             update()
         })
     }
     function activateScene(scene:string){
-        fetch_api('light/switch?scene='+scene).then( ()=>{
+        fetch_api('api/light/switch?scene='+scene).then( ()=>{
             update()
         })
     }

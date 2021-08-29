@@ -10,11 +10,11 @@ def walk_dir(path,prefix=""):
     return results
 
 
-requests.delete(url="http://172.17.100.43/fs/dir/html?recurse=true")
+requests.delete(url="http://172.17.100.43/api/fs/dir/html?recurse=true")
 
 basedir="../adminweb/build/"
 for f in walk_dir(basedir):
-    url = "http://172.17.100.43/fs/file/html/{}".format(f)
+    url = "http://172.17.100.43/api/fs/file/html/{}".format(f)
     file = "{}{}".format(basedir,f)
     print("uploaded {} to {}".format(file,url))
     requests.put(url=url,data=open(file,"rb"))
