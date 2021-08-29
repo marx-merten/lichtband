@@ -23,8 +23,8 @@
 		"allowJs": true,
 		"checkJs": true,
 		"paths": {
-			"$lib": ["src/Interface.ts"],
-			"$lib/*": ["src/Interface.ts/*"]
+			"$lib": ["src/lib"],
+			"$lib/*": ["src/lib/*"]
 		}
 	},
 	"include": ["src/**/*.d.ts", "src/**/*.js", "src/**/*.cjs","src/**/*.ts", "src/**/*.svelte"]
