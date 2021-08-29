@@ -122,9 +122,23 @@ async def sendState():
 
 
 async def initialSync():
-    asyncio.sleep_ms(1000)
-    ntptime.settime()
+    await asyncio.sleep_ms(1000)
     await sendState()
+
+async def ntpUpdater():
+    await asyncio.sleep_ms(2000)
+    try:
+        ntptime.settime()
+    except Exception :
+        pass
+    await asyncio.sleep(60*60)
+
+async def wdtLoop():
+    wdt= machine.WDT(timeout=30000)
+    wdt.feed()
+    while True:
+        await asyncio.sleep(10)
+        wdt.feed()
 
 def starteTick():
     schedule(lichtband.tick())
@@ -133,6 +147,8 @@ def starteTick():
 boot=Boot(lichtband)
 mqtt.add_ready_callback(boot.updateReady)
 mqtt.add_ready_callback(lambda: schedule(initialSync()))
+mqtt.add_ready_callback(lambda: schedule(ntpUpdater()))
+mqtt.add_ready_callback(lambda: schedule(wdtLoop()))
 mqtt.add_ready_callback(starteTick)
 
 
