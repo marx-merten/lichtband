@@ -14,16 +14,15 @@ const LOG = anylogger("App-Layout");
 onMount(() => LOG("Inner Mount"));
 
 const routes = [
-  new NavRoute("light", "light", "LED", "dvr"),
-  new NavRoute("status", "status", "Status", "today"),
-  new NavRoute("scenes", "scenes", "Szenen", "search"),
-  new NavRoute("cfg", "cfg", "config", "voicemail"),
+  new NavRoute("light", "light", "LED", "home"),
+  new NavRoute("status", "status", "Status", "list"),
+  new NavRoute("scenes", "scenes", "Szenen", "collections"),
+  new NavRoute("cfg", "cfg", "config", "settings"),
 ];
 
 $:{
     segment=$page.path.split('/').slice(-1)[0]
 }
-
 
 </script>
 
