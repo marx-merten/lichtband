@@ -5,24 +5,17 @@
 	import Button from '../../components/basic/Button.svelte';
 	import Icon from '../../components/MUIIcon.svelte';
 	import { fetch_api } from '$lib/servercalls';
+	import {fetch_light_state,lightState} from "$lib/backend";
 
-	let status = {
-		sceneState: false,
-		state: false,
-		scenes: [],
-		rgbw: [0, 0, 0, 255],
-		activeScene: 'None'
-	};
+
 
 
 	function update() {
-		fetch_api('api/light/status').then((state: any) => {
-			status = state;
-		});
+		fetch_light_state()
 	}
 
     function toggle(){
-        const newState=status.state?"False":"True"
+        const newState=$lightState.state?"False":"True"
         fetch_api('api/light/switch?state='+newState).then( ()=>{
             update()
         })
@@ -48,13 +41,13 @@
 				<button on:click={toggle}><Icon
 					icon="lightbulb"
 					size="xxl"
-					class={status.state ? 'text-orange-500' : 'text-grey-700'}
+					class={$lightState.state ? 'text-orange-500' : 'text-grey-700'}
 				/>
             </button>
 			</div>
-            {#if status.sceneState}
+            {#if $lightState.sceneActive}
             <div class="justify-self-center text-2xl">
-                {status.activeScene}
+                {$lightState.currentScene}
 			</div>
             {/if}
 		</div>
@@ -62,15 +55,12 @@
 	<div class="bg-theme-surface shadow-md rounded-lg">
 		<div class="w-full pt-1 px-2 bg-theme-primary rounded-t-lg text-theme-onPrimary">Szenen</div>
 		<div class="grid grid-cols-1 auto-rows-auto py-2 px-2 gap-2">
-            {#each status.scenes as sc}
+            {#each $lightState.scenes as sc}
                 <div class="grid grid-rows-1">
-                    <Button checked={sc==status.activeScene}  on:click={()=>{activateScene(sc)}}>{sc}</Button>
+                    <Button checked={sc==$lightState.currentScene}  on:click={()=>{activateScene(sc)}}>{sc}</Button>
                 </div>
             {/each}
 
         </div>
     </div>
-    <div class="p-3 border-2 border-red-200  col-span-full">
-		<Button on:click={update}><Icon icon="refresh" size="md" /></Button>
-	</div>
 </div>
