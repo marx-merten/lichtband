@@ -28,6 +28,12 @@ class Band:
         self.scenes={}
         self.activeScene=None
         self.sceneFrame = 0
+        self.reserver_until=None
+
+
+    def reserve_ms(self,until_delta=2000):
+        if until_delta>0:
+            self.reserver_until = utime.ticks_ms()+until_delta
 
     def isActiveScene(self):
         return self.activeScene is not  None
@@ -36,7 +42,6 @@ class Band:
         if self.isActiveScene():
             self.activeScene.deactivate()
             self.activeScene=None
-            self.update()
 
 
     def addScene(self,scene):
@@ -61,15 +66,22 @@ class Band:
 
 
     def update(self):
+        if self.reserver_until  is not None:
+            current = utime.ticks_ms()
+            if self.reserver_until < current :
+                # make sure to pass at least once
+                self.reserver_until=None
+            return
+
         if (self.state):
             if not self.isActiveScene():
                 self.leds.fill(rgbw=self.rgbw)
+                self.leds.display()
         else:
             if self.isActiveScene():
                 self.deactivateCurrentScene()
-                return
             self.leds.clear()
-        self.leds.display()
+            self.leds.display()
 
 
     def set(self,rgbw=None,state=None):
@@ -102,6 +114,8 @@ class Band:
                     self.leds.display()
                     pinDebug2.value(0)
                     self.sceneFrame+=1
+                else:
+                    self.deactivateCurrentScene()
             else:
                 self.update()
             ticksAfter=utime.ticks_ms()

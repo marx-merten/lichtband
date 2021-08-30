@@ -11,7 +11,7 @@
         "name":"lichtband_benjamin"
     },
     "led":{
-        "count":300
+        "count":60
     }
 
 }

@@ -24,11 +24,11 @@ async def _json_error(resp, error, msg=None, status="401", payload={},headers={}
 
 
 
-async def _json_msg(resp, subject, msg=None, status="200", payload={}):
+async def _json_msg(resp, subject, msg=None, status="200", payload={},headers={}):
     data = {'code': status,
             'msg': subject}
     if (msg):
         data['long_msg'] = msg
     for k in payload.keys():
         data[k] = payload[k]
-    await _json_response(resp, data, status)
+    await _json_response(resp, data, status,headers=headers)

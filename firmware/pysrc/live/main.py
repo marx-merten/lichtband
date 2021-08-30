@@ -72,7 +72,7 @@ mqtt.web.add_url_rule(re.compile("^/(.*)"),handle_html)
 
 # Connect licht values to controll flow
 try:
-    lichtband = ledstrip.Band(300,machine.Pin(23),4)
+    lichtband = ledstrip.Band(cfg.get('led/count'),machine.Pin(23),4)
 except OSError:
     print("Error in sequence, while creating lightstrip data, restart in 5")
     time.sleep_ms(5000)
@@ -84,7 +84,6 @@ except OSError:
 async def controllLightState(topic, stopic, msg, retained):
     if topic.endswith("/set"):
         lichtband.set(state=str_to_bool(msg))
-        lichtband.update()
         await sendState()
 
 async def controllLightRGBW(topic, stopic, msg, retained):
@@ -93,7 +92,6 @@ async def controllLightRGBW(topic, stopic, msg, retained):
         for o in msg.split(','):
             colors.append(int(o))
         lichtband.set(rgbw=tuple(colors))
-        lichtband.update()
         await sendState()
 
 async def controllScene(topic, stopic, msg, retained):
@@ -111,14 +109,14 @@ mqtt.subscribe("licht/scene",controllScene)
 
 async def sendState():
     v="true" if lichtband.state else "false"
-    await mqtt.publish(mqtt.prefix+"licht/state",v)
+    await mqtt.publish(mqtt.prefix+"device/scenes",",".join([ m for m in lichtband.scenes]))
     await mqtt.publish(mqtt.prefix+"licht/rgbw",",".join([str(i) for i in lichtband.rgbw]))
+    await mqtt.publish(mqtt.prefix+"licht/state",v)
     scenenName="None"
     if lichtband.isActiveScene() :
         scenenName=lichtband.activeScene.getName()
     await mqtt.publish(mqtt.prefix+"licht/scene",scenenName)
 
-    await mqtt.publish(mqtt.prefix+"device/scenes",",".join([ m for m in lichtband.scenes]))
 
 
 async def initialSync():
@@ -148,7 +146,7 @@ boot=Boot(lichtband)
 mqtt.add_ready_callback(boot.updateReady)
 mqtt.add_ready_callback(lambda: schedule(initialSync()))
 mqtt.add_ready_callback(lambda: schedule(ntpUpdater()))
-mqtt.add_ready_callback(lambda: schedule(wdtLoop()))
+#mqtt.add_ready_callback(lambda: schedule(wdtLoop()))
 mqtt.add_ready_callback(starteTick)
 
 
