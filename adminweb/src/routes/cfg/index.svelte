@@ -25,6 +25,7 @@
 					placeholder="<your SSID>"
 					bind:value={$iotConfig.network.ssid}
 				/>
+				<!-- TODO Add Selector -->
 			</div>
 		</div>
 
@@ -130,6 +131,7 @@
 				<button class="bg-theme-primary px-2 rounded-md text-theme-onPrimary flex flex-row place-items-center">
 					<MuiIcon icon="lightbulb" size="md" />
 					<span class="pl-2">TEST</span>
+					<!-- Add LED Test via backend call-->
 				</button>
 			</div>
 		</div>

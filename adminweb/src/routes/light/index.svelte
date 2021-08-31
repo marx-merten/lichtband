@@ -10,6 +10,7 @@
 
 
 
+    // TODO Add overlay while switching
 	function update() {
 		fetch_light_state()
 	}

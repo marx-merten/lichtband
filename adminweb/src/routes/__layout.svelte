@@ -13,6 +13,7 @@ import { NavRoute } from "../lib/Interface";
 const LOG = anylogger("App-Layout");
 onMount(() => LOG("Inner Mount"));
 
+// TODO Add File Manager
 const routes = [
   new NavRoute("light", "light", "LED", "home"),
   new NavRoute("status", "status", "Status", "list"),
