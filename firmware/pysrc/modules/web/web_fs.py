@@ -6,7 +6,7 @@ import ubinascii
 import re
 import uos as os
 from picoweb.utils import parse_qs
-from web.utils import _json_error, _json_msg, _json_response, _txt_response
+from web.utils import _json_error, _json_msg, _json_response, _txt_response,_cors_header
 from picoweb import http_error
 
 
@@ -146,7 +146,7 @@ async def fs_file_post(req, resp, path):
                     outfile.write(buffer)
                     if tsize >= size:
                         active = False
-        await _json_response(resp, {'checksum': ubinascii.hexlify(checksum.digest()).decode()})
+        await _json_response(resp, {'checksum': ubinascii.hexlify(checksum.digest()).decode()}, headers=corsHeader)
     except OSError:
         await http_error(resp, "404")
 
@@ -184,5 +184,7 @@ async def fs_file(req, resp):
         await fs_file_delete(req, resp, path)
     elif req.method == "POST" or req.method == "PUT":
         await fs_file_post(req, resp, path)
+    elif req.method == "OPTIONS":
+        await _cors_header(resp)
     else:
-        await _json_error(resp, "Method not Supported", payload={'method': req.method})
+        await _json_error(resp, "Method not Supported", payload={'method': req.method}, headers=corsHeader)

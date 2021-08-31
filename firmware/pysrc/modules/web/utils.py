@@ -23,6 +23,11 @@ async def _json_error(resp, error, msg=None, status="401", payload={},headers={}
     await _json_response(resp, data, status,headers=headers)
 
 
+async def _cors_header(resp,methods=['GET','POST','PUT','DELETE'],age=86400,origin='*',headers={}):
+    headers['Access-Control-Allow-Origin']=origin
+    headers['Access-Control-Allow-Methods']=", ".join(methods)
+    headers['Access-Control-Max-Age']=str(age)
+    await picoweb.start_response(resp, status="204",headers=headers)
 
 async def _json_msg(resp, subject, msg=None, status="200", payload={},headers={}):
     data = {'code': status,

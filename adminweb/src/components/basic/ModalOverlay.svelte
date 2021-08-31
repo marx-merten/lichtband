@@ -9,12 +9,14 @@
   export let visible = false;
 </script>
 
+{#if visible}
 <div
   class="{absolute ? 'absolute' : 'fixed'}  bg-theme-background bg-opacity-75 z-modal "
   style="top:{top};left:{left};right:{right};bottom:{bottom}"
   transition:fade
   on:click={() => (visible = false)}
-  class:hidden={!visible}
+
 >
   <slot />
 </div>
+{/if}
