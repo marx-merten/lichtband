@@ -27,6 +27,7 @@ async def _cors_header(resp,methods=['GET','POST','PUT','DELETE'],age=86400,orig
     headers['Access-Control-Allow-Origin']=origin
     headers['Access-Control-Allow-Methods']=", ".join(methods)
     headers['Access-Control-Max-Age']=str(age)
+    headers['Access-Control-Allow-Headers']="*"
     await picoweb.start_response(resp, status="204",headers=headers)
 
 async def _json_msg(resp, subject, msg=None, status="200", payload={},headers={}):

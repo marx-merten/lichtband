@@ -8,7 +8,7 @@ import uasyncio as asyncio
 import os
 import gc
 import re
-
+import esp32
 
 import ledstrip
 import machine
@@ -123,6 +123,12 @@ async def initialSync():
     await asyncio.sleep_ms(1000)
     await sendState()
 
+
+async def finalizePartition():
+    await asyncio.sleep_ms(10000)
+    print("ALLLL SEEMS OK, marking Partition good !!!!!")
+    esp32.Partition.mark_app_valid_cancel_rollback()
+
 async def ntpUpdater():
     await asyncio.sleep_ms(2000)
     try:
@@ -147,6 +153,7 @@ mqtt.add_ready_callback(boot.updateReady)
 mqtt.add_ready_callback(lambda: schedule(initialSync()))
 mqtt.add_ready_callback(lambda: schedule(ntpUpdater()))
 #mqtt.add_ready_callback(lambda: schedule(wdtLoop()))
+mqtt.add_ready_callback(lambda: schedule(finalizePartition()))
 mqtt.add_ready_callback(starteTick)
 
 
