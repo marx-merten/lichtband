@@ -38,6 +38,7 @@
 		"@tailwindcss/forms": "^0.3.3",
 		"anylogger": "^1.0.11",
 		"anylogger-console": "^1.0.0",
+		"crypto-js": "^4.1.1",
 		"svelte-media": "^0.1.4"
 	}
 }

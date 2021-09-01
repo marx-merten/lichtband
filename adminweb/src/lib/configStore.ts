@@ -38,7 +38,7 @@ class Config {
     }
 }
 
-let lastLoadedConfig:string=""
+let lastLoadedConfig=""
 export const iotConfig = writable(new Config())
 export const iotConfigChanged=writable(false)
 

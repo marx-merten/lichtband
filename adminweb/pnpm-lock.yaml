@@ -9,6 +9,7 @@ specifiers:
   anylogger: ^1.0.11
   anylogger-console: ^1.0.0
   autoprefixer: ^10.3.1
+  crypto-js: ^4.1.1
   cssnano: ^5.0.6
   eslint: ^7.22.0
   eslint-config-prettier: ^8.1.0
@@ -31,11 +32,12 @@ dependencies:
   '@tailwindcss/forms': 0.3.3_tailwindcss@2.2.7
   anylogger: 1.0.11
   anylogger-console: 1.0.0
+  crypto-js: 4.1.1
   svelte-media: 0.1.5_svelte@3.42.2
 
 devDependencies:
   '@sveltejs/adapter-static': 1.0.0-next.17
-  '@sveltejs/kit': 1.0.0-next.159_svelte@3.42.2
+  '@sveltejs/kit': 1.0.0-next.161_svelte@3.42.2
   '@typescript-eslint/eslint-plugin': 4.29.2_b01b7137116ac50f0745961d9cf72d34
   '@typescript-eslint/parser': 4.29.2_eslint@7.32.0+typescript@4.3.5
   autoprefixer: 10.3.2_postcss@8.3.6
@@ -154,24 +156,24 @@ packages:
     resolution: {integrity: sha512-RKYNkQxtsMgt0wD8PhfXR1hGT1Tmq1E5eZeTr1KxIerczITRnWVT8LElfu/9Kusv44yYlyQtNc1mLoYqgloOQw==}
     dev: true
 
-  /@sveltejs/kit/1.0.0-next.159_svelte@3.42.2:
-    resolution: {integrity: sha512-aSq2zgnPmTFgiVBMtlkv5X/wnVBJDAmM9coRzk+qAKZoSLmLEmDteJbFt4m6IcAS7YoNKx/smSfC8QkdGjjrdg==}
+  /@sveltejs/kit/1.0.0-next.161_svelte@3.42.2:
+    resolution: {integrity: sha512-19yrQjfskZXh5TboZI0HGAO8lq5H+JUw/JHnZZ85IGnetqJWr/sYxDmOkXAK9b97UDYAVZ/jy3Ztx5J8Nj4fkQ==}
     engines: {node: ^12.20 || >=14.13}
     hasBin: true
     peerDependencies:
       svelte: ^3.39.0
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.0-next.19_svelte@3.42.2+vite@2.5.0
+      '@sveltejs/vite-plugin-svelte': 1.0.0-next.19_svelte@3.42.2+vite@2.5.3
       cheap-watch: 1.0.3
       sade: 1.7.4
       svelte: 3.42.2
-      vite: 2.5.0
+      vite: 2.5.3
     transitivePeerDependencies:
       - diff-match-patch
       - supports-color
     dev: true
 
-  /@sveltejs/vite-plugin-svelte/1.0.0-next.19_svelte@3.42.2+vite@2.5.0:
+  /@sveltejs/vite-plugin-svelte/1.0.0-next.19_svelte@3.42.2+vite@2.5.3:
     resolution: {integrity: sha512-q9hHkMzodScwDq64pNaWhekpj97vWg3wO9T0rqd8bC2EsrBQs2uD1qMJvDqlNd63AbO2uSJMGo+TQ0Xt2xgyYg==}
     engines: {node: ^12.20 || ^14.13.1 || >= 16}
     peerDependencies:
@@ -189,7 +191,7 @@ packages:
       require-relative: 0.8.7
       svelte: 3.42.2
       svelte-hmr: 0.14.7_svelte@3.42.2
-      vite: 2.5.0
+      vite: 2.5.3
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -647,6 +649,10 @@ packages:
       shebang-command: 2.0.0
       which: 2.0.2
     dev: true
+
+  /crypto-js/4.1.1:
+    resolution: {integrity: sha512-o2JlM7ydqd3Qk9CA0L4NL6mTzU2sdx96a+oOfPu8Mkl/PK51vSyoi8/rQ8NknZtk44vq15lmhAj9CIAGwgeWKw==}
+    dev: false
 
   /css-color-names/1.0.1:
     resolution: {integrity: sha512-/loXYOch1qU1biStIFsHH8SxTmOseh1IJqFvy8IujXOm1h+QjUdDhkzOrR5HG8K8mlxREj0yfi8ewCHx0eMxzA==}
@@ -2494,8 +2500,8 @@ packages:
     resolution: {integrity: sha512-/juG65kTL4Cy2su4P8HjtkTxk6VmJDiOPBufWniqQ6wknac6jNiXS9vU+hO3wgusiyqWlzTbVHi0dyJqRONg3w==}
     dev: true
 
-  /vite/2.5.0:
-    resolution: {integrity: sha512-Dn4B+g54PJsMG5WCc4QeFy1ygMXRdTtFrUPegqfk4+vzVQcbF/DqqmI/1bxezArzbujBJg/67QeT5wz8edfJVQ==}
+  /vite/2.5.3:
+    resolution: {integrity: sha512-1wMDnjflvtTTkMov8O/Xb5+w1/VW/Gw8oCf8f6dqgHn8lMOEqq0SaPtFEQeikFcOKCfSbiU0nEi0LDIx6DNsaQ==}
     engines: {node: '>=12.2.0'}
     hasBin: true
     dependencies:

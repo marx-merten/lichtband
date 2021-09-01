@@ -4,14 +4,13 @@
 
 	import { fetch_cfg, iotConfig, iotConfigChanged ,store_cfg} from '$lib/configStore';
 	import { onMount } from 'svelte';
+import { fetch_api } from '$lib/servercalls';
 </script>
 
 <div
 	class="bg-theme-background
-             pt-4 px-2
-            h-full flex flex-col "
->
-	<div class="grid grid-cols-1  auto-rows-min lg:grid-cols-2  lg:px-9 lg:gap-4 overflow-scroll">
+             pt-4 px-2 lg:px-9
+            h-full flex flex-col grid grid-cols-1  auto-rows-min lg:grid-cols-2   lg:gap-4">
 		<div class="col-span-full font-bold text-2xl">Network:</div>
 
 		<div>
@@ -130,12 +129,12 @@
 				/>
 				<button class="bg-theme-primary px-2 rounded-md text-theme-onPrimary flex flex-row place-items-center">
 					<MuiIcon icon="lightbulb" size="md" />
-					<span class="pl-2">TEST</span>
+					<span class="pl-2" on:click={()=>fetch_api("api/light/tools/size?size="+$iotConfig.led.count)}>TEST</span>
 					<!-- Add LED Test via backend call-->
 				</button>
 			</div>
 		</div>
-	</div>
+
 	{#if $iotConfigChanged}
 		<div class="col-span-full flex flex-row gap-4 justify-end w-full pt-4 pb-4" transition:fade>
 			<button class="bg-theme-primary px-4 py-2 rounded-md text-theme-onPrimary" on:click={()=> store_cfg($iotConfig)}> save config </button>
