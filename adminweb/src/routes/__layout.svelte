@@ -18,7 +18,7 @@ const routes = [
   new NavRoute("light", "light", "LED", "home"),
   new NavRoute("status", "status", "Status", "list"),
   new NavRoute("scenes", "scenes", "Szenen", "collections"),
-  new NavRoute("tools", "tools", "Tools", "settings"),
+  new NavRoute("tools", "tools", "Tools", "construction"),
   new NavRoute("cfg", "cfg", "config", "settings"),
 ];
 

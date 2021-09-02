@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ModalOverlay from '../../components/basic/ModalOverlay.svelte';
 
-	import { fetch_api, put_file } from '$lib/servercalls';
+	import { fetch_api, put_file, put_apiWithProgress } from '$lib/servercalls';
 
 	import CryptoJS from 'crypto-js/core.js';
 	import SHA256 from 'crypto-js/sha256.js';
@@ -14,6 +14,8 @@
 	let firmwareFiles: FileList;
 	let firmwareFile: File;
 	let firmwareSHA: string;
+	let firmwareUploadProgress: number;
+	let firmwareIsUploading = false;
 	let deviceSHA: string;
 
 	$: {
@@ -25,8 +27,7 @@
 				if (evt.target.readyState == FileReader.DONE) {
 					var arrayBuffer = evt.target.result;
 
-					firmwareSHA= SHA256(CryptoJS.enc.Latin1.parse(evt.target.result));
-
+					firmwareSHA = SHA256(CryptoJS.enc.Latin1.parse(evt.target.result));
 				}
 			};
 			fileReader.readAsBinaryString(firmwareFile);
@@ -52,31 +53,53 @@
 	}
 
 	function activateFirmware(event: MouseEvent) {
-		showDlg('Update Device', 'Are you sure you want to update and reset the Device.', 'Reset', async () => {
-			await fetch_api('api/kernel/ota/activate', { headers: { 'X-OTA-CHECKSUM': deviceSHA } });
-			hideDlg();
-		});
+		showDlg(
+			'Update Device',
+			'Are you sure you want to update and reset the Device.',
+			'Reset',
+			async () => {
+				await fetch_api('api/kernel/ota/activate', { headers: { 'X-OTA-CHECKSUM': deviceSHA } });
+				hideDlg();
+			}
+		);
 	}
 	function uploadFirmware(event: MouseEvent) {
-		deviceSHA = 'UPLOADING';
-		fetch_api('api/kernel/ota/upload', { method: 'PUT', body: firmwareFile }).then((response) => {
+		firmwareIsUploading = true;
+		firmwareUploadProgress=0
+		put_apiWithProgress(
+			'api/kernel/ota/upload',
+			firmwareFile,
+			'PUT',
+			(progress) => (firmwareUploadProgress = progress)
+		).then((response) => {
 			deviceSHA = response.sha256;
+			firmwareIsUploading = false;
 		});
+		// fetch_api('api/kernel/ota/upload', { method: 'PUT', body: firmwareFile }).then((response) => {
+		// 	deviceSHA = response.sha256;
+		// });
 	}
 </script>
 
 <div class="p-5 lg:p-8">
 	<div class="bg-white overflow-hidden shadow rounded-lg divide-y divide-gray-200">
-		<div class="px-4 py-3 sm:px-6 text-theme-onPrimary bg-theme-primary font-medium">System Commands</div>
+		<div class="px-4 py-3 sm:px-6 text-theme-onPrimary bg-theme-primary font-medium">
+			System Commands
+		</div>
 		<div class="px-4 py-5 sm:p-6 grid grid-cols-2 lg:grid-cols-3 auto-rows-min">
-			<button class="bg-theme-primary rounded-md text-theme-onPrimary py-2 px-4" on:click={resetIOT}>
+			<button
+				class="bg-theme-primary rounded-md text-theme-onPrimary py-2 px-4"
+				on:click={resetIOT}
+			>
 				Reset LEDs
 			</button>
 		</div>
 	</div>
 
 	<div class="bg-white overflow-hidden shadow rounded-lg divide-y divide-gray-200 mt-4">
-		<div class="px-4 py-3 sm:px-6 text-theme-onPrimary bg-theme-primary font-medium">Update Firmware</div>
+		<div class="px-4 py-3 sm:px-6 text-theme-onPrimary bg-theme-primary font-medium">
+			Update Firmware
+		</div>
 		<div class="px-4 py-5 sm:p-6 grid grid-cols-1 lg:grid-cols-3 auto-rows-min">
 			<div class=" flex flex-col">
 				<input type="file" bind:files={firmwareFiles} />
@@ -86,13 +109,39 @@
 					<div class="mt-2">
 						<p>Firmware Selected : {firmwareFile?.name}</p>
 						<p>Firmware SHA256 : {firmwareSHA}</p>
-						<button class="bg-theme-primary rounded-md text-theme-onPrimary py-2 px-4" on:click={uploadFirmware}>
+						<button
+							class="bg-theme-primary rounded-md text-theme-onPrimary py-2 px-4"
+							on:click={uploadFirmware}
+						>
 							Upload
 						</button>
+						{#if firmwareIsUploading}
+						<div class="relative pt-1">
+							<div class="flex mb-2 items-center justify-between">
+							  <div>
+								<span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-pink-600 bg-pink-200">
+								  Uploading
+								</span>
+							  </div>
+							  <div class="text-right">
+								<span class="text-xs font-semibold inline-block text-pink-600">
+								  {firmwareUploadProgress.toFixed(2)}%
+								</span>
+							  </div>
+							</div>
+							<div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-theme-primaryLight">
+							  <div style="width:{firmwareUploadProgress}%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-theme-secondary"></div>
+							</div>
+						  </div>
+						  						{/if}
 						{#if deviceSHA !== undefined}
 							<p>Device SHA: {deviceSHA}</p>
-							{#if deviceSHA !== 'UPLOADING'}
-								<button class="bg-theme-primary rounded-md text-theme-onPrimary py-2 px-4" on:click={activateFirmware}>
+							<p>Device SHA: {deviceSHA == firmwareSHA}</p>
+							{#if deviceSHA == firmwareSHA}
+								<button
+									class="bg-theme-primary rounded-md text-theme-onPrimary py-2 px-4"
+									on:click={activateFirmware}
+								>
 									activate & Reset
 								</button>
 							{/if}
@@ -107,7 +156,10 @@
 <!-- New Scene Dialog -->
 <ModalOverlay bind:visible={dlgVisible}>
 	<div class="h-full w-full grid grid-cols-1 justify-items-center items-center grid-rows-1">
-		<div class="bg-theme-surface text-theme-onSurface shadow sm:rounded-lg" on:click|stopPropagation={() => {}}>
+		<div
+			class="bg-theme-surface text-theme-onSurface shadow sm:rounded-lg"
+			on:click|stopPropagation={() => {}}
+		>
 			<div class="px-4 py-5 sm:p-6">
 				<h3 class="text-lg leading-6 font-medium ">{dlgTitle}</h3>
 				<div class="mt-2 max-w-xl text-sm ">
