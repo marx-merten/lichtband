@@ -22,7 +22,7 @@ class Band:
         self.leds = cfled.RmtLed(pin=pin,leds=ledcount,bpp=bpp)
         self.leds.clear()
         self.leds.display()
-        self.rgbw=(0,0,0,0)
+        self.rgb=(0,0,0)
         self.state=False
         self.ledSaved=None
         self.scenes={}
@@ -75,7 +75,7 @@ class Band:
 
         if (self.state):
             if not self.isActiveScene():
-                self.leds.fill(rgbw=self.rgbw)
+                self.leds.fill(rgb=self.rgb)
                 self.leds.display()
         else:
             if self.isActiveScene():
@@ -84,11 +84,11 @@ class Band:
             self.leds.display()
 
 
-    def set(self,rgbw=None,state=None):
+    def set(self,rgb=None,state=None):
         if state is not None :
             self.state=state
-        if rgbw is not None :
-            self.rgbw=rgbw
+        if rgb is not None :
+            self.rgb=rgb
 
     def backup(self):
         self.ledSaved = self.leds.backup()

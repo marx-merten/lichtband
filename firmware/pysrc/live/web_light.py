@@ -71,7 +71,7 @@ class LightWeb:
     async def web_status(self,req,resp):
         lichtstatus = {}
         lichtstatus['state'] = self.lichtband.state
-        lichtstatus['rgbw'] = self.lichtband.rgbw
+        lichtstatus['rgb'] = self.lichtband.rgb
         lichtstatus['sceneState'] = self.lichtband.isActiveScene()
         if self.lichtband.isActiveScene() :
             lichtstatus['activeScene'] = self.lichtband.activeScene.getName()

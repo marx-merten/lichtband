@@ -86,12 +86,12 @@ async def controllLightState(topic, stopic, msg, retained):
         lichtband.set(state=str_to_bool(msg))
         await sendState()
 
-async def controllLightRGBW(topic, stopic, msg, retained):
+async def controllLightRGB(topic, stopic, msg, retained):
     if topic.endswith("/set"):
         colors = []
         for o in msg.split(','):
             colors.append(int(o))
-        lichtband.set(rgbw=tuple(colors))
+        lichtband.set(rgb=tuple(colors))
         await sendState()
 
 async def controllScene(topic, stopic, msg, retained):
@@ -103,14 +103,14 @@ async def controllScene(topic, stopic, msg, retained):
 
 
 mqtt.subscribe("licht/state",controllLightState)
-mqtt.subscribe("licht/rgbw",controllLightRGBW)
+mqtt.subscribe("licht/rgb",controllLightRGB)
 mqtt.subscribe("licht/scene",controllScene)
 
 
 async def sendState():
     v="true" if lichtband.state else "false"
     await mqtt.publish(mqtt.prefix+"device/scenes",",".join([ m for m in lichtband.scenes]))
-    await mqtt.publish(mqtt.prefix+"licht/rgbw",",".join([str(i) for i in lichtband.rgbw]))
+    await mqtt.publish(mqtt.prefix+"licht/rgb",",".join([str(i) for i in lichtband.rgb]))
     await mqtt.publish(mqtt.prefix+"licht/state",v)
     scenenName="None"
     if lichtband.isActiveScene() :
