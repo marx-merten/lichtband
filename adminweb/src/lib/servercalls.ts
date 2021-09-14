@@ -1,7 +1,7 @@
 import { browser, dev } from '$app/env';
 
 export function getBaseUrl(): string {
-	if (dev) return 'http://172.17.100.43/';
+	if (dev) return 'http://172.17.100.58/';
 	else return '/';
 }
 

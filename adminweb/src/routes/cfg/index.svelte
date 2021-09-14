@@ -9,7 +9,7 @@ import { fetch_api } from '$lib/servercalls';
 
 <div
 	class="bg-theme-background
-             pt-4 px-2 lg:px-9
+             py-4 px-2 lg:px-9
             h-full flex flex-col grid grid-cols-1  auto-rows-min lg:grid-cols-2   lg:gap-4">
 		<div class="col-span-full font-bold text-2xl">Network:</div>
 
@@ -134,6 +134,7 @@ import { fetch_api } from '$lib/servercalls';
 				</button>
 			</div>
 		</div>
+		<div class="h-4 col-span-full"/>
 
 	{#if $iotConfigChanged}
 		<div class="col-span-full flex flex-row gap-4 justify-end w-full pt-4 pb-4" transition:fade>
