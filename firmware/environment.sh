@@ -2,7 +2,7 @@ curdir=$(pwd)
 echo ${curdir}
 echo =====================
 export MICROPYTHON_DIR=${curdir}/../../../environments/micropython-custom
-export ESPIDF=${curdir}/../../../environments/esp32/espidf4_2
+export ESPIDF=${curdir}/../../../environments/esp32/espidf4_4
 . ${ESPIDF}/export.sh
 
 export BOARD=GENERIC_OTA

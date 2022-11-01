@@ -1,3 +1,4 @@
+#!/bin/bash
 curdir=$(pwd)
 find . -name "__pycache__" -type d -prune -exec rm -rf '{}' '+'
 
@@ -18,5 +19,4 @@ fi
     && python ${ESPIDF}/components/partition_table/gen_esp32part.py \
             ./build-${BOARD}/partition_table/partition-table.bin > ${curdir}/built_partition.table
 popd
-
 #make -C ../../../environments/micropython//ports/esp32 -j4 V=0 MICROPY_PY_BTREE=0 MICROPY_PY_FFI=0 MICROPY_PY_USSL=0 MICROPY_PY_AXTLS=0 MICROPY_FATFS=0 MICROPY_PY_THREAD=0 CFLAGS_EXTRA="-DMODULE_UPYWRAPTEST_ENABLED=1" BUILD=build-usercmod UPYWRAP_BUILD_CPPMODULE=1 UPYWRAP_PORT_DIR=../../../environments/micropython//ports/esp32 all

@@ -13,7 +13,7 @@ import esp32
 import ledstrip
 import machine
 import time
-import ntptime
+# import pysrc_backup.ntptime as ntptime
 
 import web.web_fs as web_filesystem
 
@@ -129,13 +129,13 @@ async def finalizePartition():
     print("ALLLL SEEMS OK, marking Partition good !!!!!")
     esp32.Partition.mark_app_valid_cancel_rollback()
 
-async def ntpUpdater():
-    await asyncio.sleep_ms(2000)
-    try:
-        ntptime.settime()
-    except Exception :
-        pass
-    await asyncio.sleep(60*60)
+# async def ntpUpdater():
+#     await asyncio.sleep_ms(2000)
+#     try:
+#         ntptime.settime()
+#     except Exception :
+#         pass
+#     await asyncio.sleep(60*60)
 
 async def wdtLoop():
     wdt= machine.WDT(timeout=30000)
@@ -151,7 +151,7 @@ def starteTick():
 boot=Boot(lichtband)
 mqtt.add_ready_callback(boot.updateReady)
 mqtt.add_ready_callback(lambda: schedule(initialSync()))
-mqtt.add_ready_callback(lambda: schedule(ntpUpdater()))
+# mqtt.add_ready_callback(lambda: schedule(ntpUpdater()))
 #mqtt.add_ready_callback(lambda: schedule(wdtLoop()))
 mqtt.add_ready_callback(lambda: schedule(finalizePartition()))
 mqtt.add_ready_callback(starteTick)

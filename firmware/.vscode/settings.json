@@ -6,5 +6,11 @@
         "pysrc/stubs",
 
     ],
-    "python.linting.pylintEnabled": true
+    "python.linting.pylintEnabled": true,
+    "python.analysis.extraPaths": [
+        "pysrc/firmware",
+        "pysrc/modules",
+        "pysrc/live",
+        "pysrc/stubs"
+    ]
 }
